@@ -7,7 +7,7 @@ from tkinter import filedialog, messagebox, font as ft
 
 # ------------- 기본 변수
 
-version = 'v1.7.5'
+version = 'v1.7.6'
 
 difficulties = ["평화로움", "쉬움", "보통", "어려움"]
 difficulties_en = ["peaceful", "easy", "normal", "hard"]
@@ -107,7 +107,7 @@ def check_update(now_version: str) -> bool:
 def get_updates():
     if check_update(version):
         show_warning("업데이트", f"새로운 업데이트가 있습니다. 업데이트를 진행합니다.")
-        os.system("start updater.exe")
+        os.startfile(f"updater.exe")
         window.destroy()
     else:
         show_message("업데이트", f"현재 최신 버전입니다.")
@@ -616,6 +616,7 @@ def create():
     progress_text.config(text="버킷 생성 완료!")
     print("완료")
     os.startfile(dir_path_2)
+    os.chdir(original_dir)
 
 def define_bukkit():
     try:
@@ -1974,6 +1975,8 @@ def change_theme() -> None:
     config_write("theme", str(sv_ttk.get_theme()).lower())
 
 if __name__ == "__main__":
+
+    original_dir = os.getcwd()
     config_write("version", version)
 
     window = tk.Tk()
