@@ -7,7 +7,7 @@ from tkinter import filedialog, messagebox, font as ft
 
 # ------------- 기본 변수
 
-version = 'v1.7.4'
+version = 'v1.7.5'
 
 difficulties = ["평화로움", "쉬움", "보통", "어려움"]
 difficulties_en = ["peaceful", "easy", "normal", "hard"]
@@ -462,18 +462,18 @@ def create():
     with open(f'{dir_path_2}/start.bat', 'w+') as f:
         if java_version == 'java':
             if selected_bukkit == "Forge" and int(selected_version.split(".")[1]) >= 17:
-                f.write(f'@echo off\ntitle {selected_version}_{selected_bukkit}_버킷\n:main\ncls\njava -Xms{selected_min_ram} -Xmx{selected_max_ram} @libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
+                f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\njava -Xms{selected_min_ram} -Xmx{selected_max_ram} @libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
             elif selected_bukkit == "NeoForge":
-                f.write(f'@echo off\ntitle {selected_version}_{selected_bukkit}_버킷\n:main\ncls\njava -Xms{selected_min_ram} -Xmx{selected_max_ram} @libraries/net/neoforged/neoforge/{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
+                f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\njava -Xms{selected_min_ram} -Xmx{selected_max_ram} @libraries/net/neoforged/neoforge/{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
             else:
-                f.write(f'@echo off\ntitle {selected_version}_{selected_bukkit}_버킷\n:main\ncls\njava -Xms{selected_min_ram} -Xmx{selected_max_ram} -jar server.jar nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
+                f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\njava -Xms{selected_min_ram} -Xmx{selected_max_ram} -jar server.jar nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
         else:
             if selected_bukkit == "Forge" and int(selected_version.split(".")[1]) >= 17:
-                f.write(f'@echo off\ntitle {selected_version}_{selected_bukkit}_버킷\n:main\ncls\n"{java_path}" -Xms{selected_min_ram} -Xmx{selected_max_ram} @libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
+                f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\n"{java_path}" -Xms{selected_min_ram} -Xmx{selected_max_ram} @libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
             elif selected_bukkit == "NeoForge":
-                f.write(f'@echo off\ntitle {selected_version}_{selected_bukkit}_버킷\n:main\ncls\n"{java_path}" -Xms{selected_min_ram} -Xmx{selected_max_ram} @libraries/net/neoforged/neoforge/{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
+                f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\n"{java_path}" -Xms{selected_min_ram} -Xmx{selected_max_ram} @libraries/net/neoforged/neoforge/{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
             else:
-                f.write(f'@echo off\ntitle {selected_version}_{selected_bukkit}_버킷\n:main\ncls\n"{java_path}" -Xms{selected_min_ram} -Xmx{selected_max_ram} -jar server.jar nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
+                f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\n"{java_path}" -Xms{selected_min_ram} -Xmx{selected_max_ram} -jar server.jar nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
         f.close()
     progress_text.config(text="실행 파일 생성 완료")
 
