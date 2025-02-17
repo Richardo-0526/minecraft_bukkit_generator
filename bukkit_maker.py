@@ -172,7 +172,7 @@ def config_write(key: str, value: str):
         with open('config.ini', "rb") as f:
             content = f.read()
             encoding = chardet.detect(content)['encoding']
-
+            
             if encoding and not 'utf-8' in encoding.lower():
                 contents = content.decode(encoding)
                 with open('config.ini', 'w', encoding='UTF-8', newline='\n') as f2:
