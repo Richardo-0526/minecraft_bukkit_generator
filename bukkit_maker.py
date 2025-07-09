@@ -7,7 +7,7 @@ from tkinter import filedialog, messagebox, font as ft
 
 # ------------- 기본 변수
 
-version = 'v1.7.6'
+version = 'v1.7.7'
 
 difficulties = ["평화로움", "쉬움", "보통", "어려움"]
 difficulties_en = ["peaceful", "easy", "normal", "hard"]
@@ -781,10 +781,15 @@ def get_build_version(event) -> None:
         response = requests.get('https://mohistmc.com/api/v2/projects/mohist/{0}/builds'.format(selected_version), headers=headers)
         response_json = response.json()
         builds = response_json['builds']
+        t_builds = []
         for i in range(len(builds)):
-            builds[i] = builds[i]["number"]
+            try:
+                t_builds.append(builds[i]['number'])
+            except:
+                t_builds.append(builds[i]['id'])
 
-        builds.sort(reverse=True)
+        builds = t_builds
+        # builds.sort(reverse=True)
 
     elif selected_bukkit == "NeoForge":
         headers = {
