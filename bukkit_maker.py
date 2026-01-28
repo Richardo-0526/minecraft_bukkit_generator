@@ -1,4 +1,4 @@
-import tkinter as tk, tkinter.ttk as ttk, requests, xmltodict, os, shutil as su, re, sv_ttk, darkdetect, pywinstyles, sys, base64, zlib, tempfile, configparser as cp, codecs, chardet, threading
+import tkinter as tk, tkinter.ttk as ttk, requests, xmltodict, os, shutil as su, re, sv_ttk, darkdetect, pywinstyles, sys, base64, zlib, tempfile, configparser as cp, codecs, chardet, threading, subprocess
 from packaging.version import Version
 from packaging import version as vv
 from PIL import ImageTk, Image
@@ -7,8 +7,7 @@ from tkinter import filedialog, messagebox, font as ft
 
 # ------------- 기본 변수
 
-version = 'v1.7.9'
-
+version = 'v1.8.0'
 difficulties = ["평화로움", "쉬움", "보통", "어려움"]
 difficulties_en = ["peaceful", "easy", "normal", "hard"]
 gamemodes = ["서바이벌", "크리에이티브", "모험", "관전"]
@@ -35,6 +34,8 @@ motd_P = "A Minecraft Server"
 server_f_status = True
 plugins_status = False
 mods_status = False
+
+logs = ""
 
 bukkit_list = ["Vanilla", "Paper", "Purpur", "Plazma", "Leaves", "Pufferfish", "Folia", "Forge", "NeoForge", "Fabric", "Mohist", "CatServer", "Arclight", "Velocity", "SpongeVanilla"]
 
@@ -82,7 +83,7 @@ def convert_encoding(file_path, from_encoding, to_encoding):
 
 ICON = zlib.decompress(base64.b64decode('eJxjYGAEQgEBBiDJwZDBy'
     'sAgxsDAoAHEQCEGBQaIOAg4sDIgACMUj4JRMApGwQgF/ykEAFXxQRc='))
- 
+
 _, ICON_PATH = tempfile.mkstemp()
 with open(ICON_PATH, 'wb') as icon_file:
     icon_file.write(ICON)
@@ -107,6 +108,11 @@ def check_update(now_version: str) -> bool:
 def get_updates():
     if check_update(version):
         show_warning("업데이트", f"새로운 업데이트가 있습니다. 업데이트를 진행합니다.")
+        if not os.path.exists("updater.exe"):
+            # messagebox.showerror("Error", "자동 업데이터 파일이 없어 자동으로 다운로드합니다.")
+            show_warning("업데이트", "자동 업데이터 파일을 다운로드합니다.")
+            download("https://www.richardo.net/files/bukkits/updater.exe", ".", "updater.exe")
+
         os.startfile(f"updater.exe")
         window.destroy()
     else:
@@ -292,8 +298,9 @@ def p_var_update(progress: int) -> None:
     progress_bar.update()
 
 def create():
+    global logs
     p_var_update(0)
-
+    
     # 설정 변수 불러오기
     try:
         selected_bukkit = bukkit_genre.get()
@@ -304,6 +311,9 @@ def create():
         selected_dir = dir_path.get()
         selected_java = java_dir_path.get()
     except Exception as e: raise(e)
+
+    detail_log_button.config(state=tk.NORMAL)
+    logs = ""
 
     p_var_update(10)
     # 폴더 생성
@@ -424,32 +434,158 @@ def create():
 
     progress_text.config(text="자바 버전 탐지 중 . (4/5) | 폴더 내 자바 버전 탐지")
     java_version = os.listdir(java_path)
+    detect = False
+    find = 'false'
 
     try:
-        if int(selected_version.split('.')[1]) <= 16:
-            for i in java_version:
-                if '1.8.0' in i:
-                    java_version = i
-                    break
-        elif int(selected_version.split('.')[1]) <= 20:
-            try: int(selected_version.split('.')[2])
-            except: selected_version += ".0"
-            if int(selected_version.split('.')[2]) >= 5:
+        if int(selected_version.split('.')[0]) == 1:
+            if int(selected_version.split('.')[1]) <= 16:
                 for i in java_version:
-                    if int(i.split('-')[1]) >= 21:
+                    if '1.8.0' in i:
                         java_version = i
+                        detect = True
+                        find = 'true'
                         break
+
+                if find == 'false':
+                    find = '8(1.8)'
+            elif int(selected_version.split('.')[1]) <= 17:
+
+                for i in java_version:
+                    try:
+                        if Version(i.split('-')[1]) >= Version('16'):
+                            java_version = i
+                            detect = True
+                            find = 'true'
+                            break
+                    except: continue
+
+                if find == 'false':
+                    find = '16'
+            elif int(selected_version.split('.')[1]) <= 20:
+                try: int(selected_version.split('.')[2])
+                except: selected_version += ".0"
+                if int(selected_version.split('.')[2]) >= 5:
+
+                    for i in java_version:
+                        try:
+                            if Version(i.split('-')[1]) >= Version('21'):
+                                java_version = i
+                                detect = True
+                                find = 'true'
+                                break
+                        except: continue
+
+                    if find == 'false':
+                        find = '21'
+                else:
+                    for i in java_version:
+                        try:
+                            if Version(i.split('-')[1]) >= Version('17'):
+                                java_version = i
+                                detect = True
+                                find = 'true'
+                                break
+                        except: continue
+
+                    if find == 'false':
+                        find = '17'
             else:
                 for i in java_version:
-                    if int(i.split('-')[1]) >= 17:
-                        java_version = i
-                        break
+                    try:
+                        if Version(i.split('-')[1]) >= Version('21'):
+                            java_version = i
+                            detect = True
+                            find = 'true'
+                            break
+                    except: continue
+
+                if find == 'false':
+                    find = '21'
         else:
             for i in java_version:
-                if int(i.split('-')[1]) >= 21:
-                    java_version = i
-                    break
-    except: java_version = 'java'
+                try:
+                    if Version(i.split('-')[1]) >= Version('25'):
+                        java_version = i
+                        detect = True
+                        find = 'true'
+                        break
+                except: continue
+
+            if find == 'false':
+                find = '25'
+    except:
+        try:
+            if int(selected_version.split('w')[0]) <= 21:
+                if int((selected_version.split('w')[1]).replace('a', '')) >= 19:
+                    for i in java_version:
+                        try:
+                            if Version(i.split('-')[1]) >= Version('16'):
+                                java_version = i
+                                detect = True
+                                find = 'true'
+                                break
+                        except: continue
+
+                    if find == 'false':
+                        find = '16'
+                else:
+                    for i in java_version:
+                        if '1.8.0' in i:
+                            java_version = i
+                            detect = True
+                            find = 'true'
+                            break
+
+                    if find == 'false':
+                        find = '8(1.8)'
+            elif int(selected_version.split('w')[0]) <= 24:
+                if int((selected_version.split('w')[1]).replace('a', '')) >= 14:
+                    for i in java_version:
+                        try:
+                            if Version(i.split('-')[1]) >= Version('21'):
+                                java_version = i
+                                detect = True
+                                find = 'true'
+                                break
+                        except: continue
+
+                    if find == 'false':
+                        find = '21'
+                else:
+                    for i in java_version:
+                        try:
+                            if Version(i.split('-')[1]) >= Version('17'):
+                                java_version = i
+                                detect = True
+                                find = 'true'
+                                break
+                        except: continue
+
+                    if find == 'false':
+                        find = '17'
+            else:
+                for i in java_version:
+                    try:
+                        if Version(i.split('-')[1]) >= Version('21'):
+                            java_version = i
+                            detect = True
+                            find = 'true'
+                            break
+                    except: continue
+
+                if find == 'false':
+                    find = '21'
+        except:
+            detect = False
+
+    if find != 'true':
+        java_version = 'java'
+        show_warning("경고", f"선택한 마인크래프트 버전({selected_version})은 Java {find} 이상을 요구하지만, 탐지할 수 없습니다.")
+
+    if detect == False:
+        java_version = 'java'
+        show_warning("경고", "자바 버전 탐지에 실패하여 기본 자바 경로로 설정됩니다. 자바 경로를 수동으로 지정하는 것을 권장합니다.")
 
     progress_text.config(text="자바 버전 탐지 중 .. (5/5) | 자바 파일 경로 설정")
     java_path = f'{java_path}/{java_version}/bin/java.exe'
@@ -478,12 +614,24 @@ def create():
     progress_text.config(text="실행 파일 생성 완료")
 
     if selected_bukkit == "Forge" or selected_bukkit == "NeoForge":
-        progress_text.config(text="(Neo)Forge 실행 파일 생성 중 . (1/1) | 실행 파일 생성 중")
+        progress_text.config(text="(Neo)Forge 실행 파일 생성 중 . (1/1) | 실행 파일 생성 중 ( 세부 로그 버튼을 눌러 진행 상황 확인 가능 )")
         os.chdir(dir_path_2)
         if java_version == 'java':
-            os.system(f'java -jar install.jar --installServer')
+            # os.system(f'java -jar install.jar --installServer')
+            f = subprocess.Popen(['java', '-jar', 'install.jar', '--installServer'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         else:
-            os.system(fr'""{java_path}" -jar install.jar" --installServer')
+            # os.system(fr'""{java_path}" -jar install.jar" --installServer')
+            f = subprocess.Popen([f'{java_path}', '-jar', 'install.jar', '--installServer'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+
+        while f.poll() is None:
+            line = f.stdout.readline()
+            if len(logs) > 1000:
+                logs = ""
+            try: update_logs_box(line.decode('utf-8').strip())
+            except UnicodeDecodeError:
+                try: update_logs_box(line.decode('cp949').strip())
+                except: pass
+
         os.remove(f'install.jar')
         if int(selected_version.split(".")[1]) <= 16:
             for i in os.listdir(dir_path_2):
@@ -502,26 +650,42 @@ def create():
     progress_text.config(text="기타 생성 파일 삭제 완료")
 
     p_var_update(60)
+
+    
+    logs = ""
     # eula 허용
     if not (selected_bukkit == "Mohist" or selected_bukkit == "CatServer"):
         progress_text.config(text="Eula 허용 중 . (1/5) | 버킷 폴더 경로 지정")
         os.chdir(dir_path_2)
 
-        progress_text.config(text="Eula 허용 중 .. (2/5) | 서버 실행 중")
+        progress_text.config(text="Eula 허용 중 .. (2/5) | 서버 실행 중 ( 시간이 소요됩니다 )")
         if java_version == 'java':
             if selected_bukkit == "Forge" and int(selected_version.split(".")[1]) >= 17:
-                os.system(f'java @libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt %* nogui')
+                # os.system(f'java @libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt %* nogui')
+                p = subprocess.Popen(['java', f'@libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt', '%*', 'nogui'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
             elif selected_bukkit == "NeoForge":
-                os.system(f'java @libraries/net/neoforged/neoforge/{selected_build}/win_args.txt %* nogui')
+                # os.system(f'java @libraries/net/neoforged/neoforge/{selected_build}/win_args.txt %* nogui')
+                p = subprocess.Popen(['java', f'@libraries/net/neoforged/neoforge/{selected_build}/win_args.txt', '%*', 'nogui'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
             else:
-                os.system(f'java -jar server.jar nogui')
+                # os.system(f'java -jar server.jar nogui')
+                p = subprocess.Popen(['java', '-jar', 'server.jar', 'nogui'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         else:
             if selected_bukkit == "Forge" and int(selected_version.split(".")[1]) >= 17:
-                os.system(f'"{java_path}" @libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt %* nogui')
+                # os.system(f'"{java_path}" @libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt %* nogui')
+                p = subprocess.Popen([f'{java_path}', f'@libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt', '%*', 'nogui'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
             elif selected_bukkit == "NeoForge":
-                os.system(f'"{java_path}" @libraries/net/neoforged/neoforge/{selected_build}/win_args.txt %* nogui')
+                # os.system(f'"{java_path}" @libraries/net/neoforged/neoforge/{selected_build}/win_args.txt %* nogui')
+                p = subprocess.Popen([f'{java_path}', f'@libraries/net/neoforged/neoforge/{selected_build}/win_args.txt', '%*', 'nogui'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
             else:
-                os.system(f'"{java_path}" -jar server.jar nogui')
+                # os.system(f'"{java_path}" -jar server.jar nogui')
+                p = subprocess.Popen([f'{java_path}', '-jar', 'server.jar', 'nogui'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            
+        while p.poll() is None:
+            line = p.stdout.readline()
+            try: update_logs_box(line.decode('utf-8').strip())
+            except UnicodeDecodeError:
+                try: update_logs_box(line.decode('cp949').strip())
+                except: print("?")
 
         progress_text.config(text="Eula 허용 중 ... (3/5) | eula.txt 읽기 중")
         with open(f'{dir_path_2}/eula.txt', 'r') as f:
@@ -1948,6 +2112,55 @@ def define_settings():
 
     detail_settings_text.config(text=f"게임모드: {gamemodes[gamemode]}\n난이도: {difficulties[difficulty]}\n레벨 타입: {leveltypes[level_type]}\nPvP: {pvp}\n스폰 보호: {spawn_protection}\n비행 허용: {allow_flight}\n최대 플레이어 수: {max_players}\n커맨드 블록 허용: {allow_command_block}\n포트: {port}\n화이트리스트: {whitelist}\nMOTD: {motd}")
 
+def update_logs_box(line: str = None) -> None:
+    '''로그 박스에 로그 추가'''
+    global logs
+    if line is not None:
+        logs += line + '\n'
+    try:
+        logs_box.config(state='normal')
+        logs_box.insert(tk.END, logs)
+        logs_box.see(tk.END)
+        logs_box.config(state='disabled')
+    except: pass
+
+
+def open_logs() -> None:
+    '''세부 로그 버튼 클릭 시 호출, 버킷 실행 시 작성되는 로그 확인'''
+
+    global new_open_logs
+
+    try:
+        new_open_logs.focus()
+        return
+    except: pass
+    
+    new_open_logs = tk.Toplevel(window)
+    new_open_logs.title("")
+    new_open_logs.minsize(new_open_logs.winfo_width(), new_open_logs.winfo_height())
+    new_open_logs.resizable(False, False)
+
+    new_open_logs.wm_attributes("-topmost", 1)
+
+    new_open_logs.update()
+    new_open_logs.geometry(f"+{window.winfo_x()}+{window.winfo_y()}")
+
+    apply_theme_to_titlebar(new_open_logs)
+
+    main_frame = ttk.LabelFrame(new_open_logs, text="Logs", padding=(20, 10))
+    main_frame.config(labelanchor='n')
+
+    main_frame.grid(row=0, column=0, padx=10, pady=10)
+    global logs_box
+
+    logs_box = tk.Text(main_frame, width=80, height=20, wrap=tk.WORD)
+    logs_box.grid(row=0, column=0, padx=5, pady=5)
+
+    warn_text = tk.Label(main_frame, text="경고: 로그가 길어질 수 있으며, 로그를 확인하는 동안엔 프로그램이 느려질 수 있습니다.")
+    warn_text.grid(row=1, column=0, padx=5, pady=5)
+
+    update_logs_box()
+
 def change_theme() -> None:
     '''테마 변경 클릭 시 호출되는 함수, 현재 테마를 불러오며 테마 변경함.'''
     
@@ -2159,14 +2372,18 @@ if __name__ == "__main__":
     progress_text = tk.Label(main_frame, text="대기 중")
     progress_text.grid(row=5, column=1, padx=5, pady=5)
 
+    detail_log_button = ttk.Button(main_frame, text="세부 로그", command=open_logs, state=tk.DISABLED)
+    detail_log_button.grid(row=6, column=1, padx=5, pady=5)
+
+    logs_box = tk.Text(main_frame, width=80, height=20, wrap=tk.WORD)
+    
     apply_theme_to_titlebar(window)
 
-    if not os.path.exists("updater.exe"):
-        # messagebox.showerror("Error", "자동 업데이터 파일이 없어 자동으로 다운로드합니다.")
-        show_error("오류", "자동 업데이터 파일이 없어 자동으로 다운로드합니다.")
-        download("https://www.richardo.net/files/bukkits/updater.exe", ".", "updater.exe")
+    show_message("버킷 제작기", "본 제작기를 사용하여 버킷을 제작하는 경우, Minecraft EULA에 동의하는 것으로 간주되며, 동의하지 않으시려면 프로그램을 종료해주세요.")
 
     if check_update(version):
         get_updates()
+    else:
+        if os.path.exists("updater.exe"): os.remove("updater.exe")
 
     window.mainloop()
