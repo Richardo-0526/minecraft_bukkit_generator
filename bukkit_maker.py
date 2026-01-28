@@ -2379,7 +2379,7 @@ if __name__ == "__main__":
     
     apply_theme_to_titlebar(window)
 
-    show_message("버킷 제작기", "본 제작기를 사용하여 버킷을 제작하는 경우, Minecraft EULA에 동의하는 것으로 간주되며, 동의하지 않으시려면 프로그램을 종료해주세요.")
+    show_warning("버킷 제작기", "이 제작기를 이용해 버킷을 제작하는 경우, Minecraft EULA에 동의한 것으로 간주됩니다.\n동의하지 않으실 경우 프로그램을 종료해 주세요.")
 
     if check_update(version):
         get_updates()
