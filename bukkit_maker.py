@@ -7,7 +7,7 @@ from tkinter import filedialog, messagebox, font as ft
 
 # ------------- 기본 변수
 
-version = 'v1.7.7'
+version = 'v1.7.9'
 
 difficulties = ["평화로움", "쉬움", "보통", "어려움"]
 difficulties_en = ["peaceful", "easy", "normal", "hard"]
@@ -225,7 +225,7 @@ def modify_property(file_path, key, new_value):
 
 def download(url, dir, file_name):
     with open(f'{dir}/{file_name}', 'wb') as file:
-        response = requests.get(url)
+        response = requests.get(url, stream=True)
         file.write(response.content)
 
 def open_dir():
@@ -359,7 +359,7 @@ def create():
         installer_version.sort(reverse=True, key=Version)
         # print(installer_version)
         url = f'https://meta.fabricmc.net/v2/versions/loader/{selected_version}/{selected_build}/{installer_version[0]}/server/jar'
-    elif selected_bukkit == "Mohist": url = f"https://mohistmc.com/api/v2/projects/mohist/{selected_version}/builds/{selected_build}/download"
+    elif selected_bukkit == "Mohist": url = f"https://api.mohistmc.com/project/mohist/{selected_version}/builds/{selected_build}/download"
     elif selected_bukkit == "NeoForge": url = f'https://maven.neoforged.net/releases/net/neoforged/neoforge/{selected_build}/neoforge-{selected_build}-installer.jar'
     elif selected_bukkit == "Plazma":
         if selected_version.split(".")[1] == "19" or (selected_version.split(".")[1] == "20" and (selected_version.split(".")[2] == "1" or selected_version.split(".")[2] == "2")):
@@ -778,18 +778,13 @@ def get_build_version(event) -> None:
             'accept': 'application/json',
         }
 
-        response = requests.get('https://mohistmc.com/api/v2/projects/mohist/{0}/builds'.format(selected_version), headers=headers)
+        response = requests.get('https://api.mohistmc.com/project/mohist/{0}/builds'.format(selected_version), headers=headers)
         response_json = response.json()
-        builds = response_json['builds']
-        t_builds = []
+        builds = response_json
         for i in range(len(builds)):
-            try:
-                t_builds.append(builds[i]['number'])
-            except:
-                t_builds.append(builds[i]['id'])
+            builds[i] = (builds[i]['id'])
 
-        builds = t_builds
-        # builds.sort(reverse=True)
+        builds.sort(reverse=True)
 
     elif selected_bukkit == "NeoForge":
         headers = {
@@ -970,7 +965,7 @@ def get_bukkit_version(event):
         for i in response_json['versions']:
             versions.append(f"1.{i.split('.')[0]}.{i.split('.')[1]}")
         versions = list(set(versions))
-        versions.sort(reverse=True, key=Version)
+        versions.sort(reverse=True)
 
     elif selected_bukkit == "Plazma":
         versions = ["1.21.4", "1.21.3", "1.21.1", "1.20.6", "1.20.4", "1.20.2", "1.20.1", "1.19.4"]
@@ -1004,7 +999,7 @@ def get_bukkit_version(event):
         versions = []
         for i in response_json["tags"]["minecraft"]:
             versions.append(i)
-        versions.sort(reverse=True, key=Version)
+        versions.sort(reverse=True)
 
     bukkit_version_box.set('')
     bukkit_version_box.config(values=versions)
