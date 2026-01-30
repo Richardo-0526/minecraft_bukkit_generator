@@ -7,7 +7,7 @@ from tkinter import filedialog, messagebox, font as ft
 
 # ------------- 기본 변수
 
-version = 'v1.9.4'
+version = 'v1.9.5'
 difficulties = ["평화로움", "쉬움", "보통", "어려움"]
 difficulties_en = ["peaceful", "easy", "normal", "hard"]
 gamemodes = ["서바이벌", "크리에이티브", "모험", "관전"]
@@ -50,7 +50,6 @@ if get_manifests.status_code != 200:
     get_manifests = {}
 else:
     get_manifests = get_manifests.json()
-
     manifests_version = get_manifests['versions']
 
 adoptium_release_api = get_manifests["adoptium"]["release_api"] if (get_manifests.get("adoptium") != None) and (get_manifests["adoptium"].get("release_api") != None) else "https://api.adoptium.net/v3/info/available_releases"
