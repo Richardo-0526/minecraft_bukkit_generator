@@ -7,7 +7,7 @@ from tkinter import filedialog, messagebox, font as ft
 
 # ------------- 기본 변수
 
-version = 'v1.9.2'
+version = 'v1.9.3'
 difficulties = ["평화로움", "쉬움", "보통", "어려움"]
 difficulties_en = ["peaceful", "easy", "normal", "hard"]
 gamemodes = ["서바이벌", "크리에이티브", "모험", "관전"]
@@ -646,7 +646,7 @@ def create():
 
                 progress_text.config(text="자바 자동 설치 중 (3/5) | Java 설치 중")
 
-                result = subprocess.run(cmd)
+                result = subprocess.run(cmd, shell=True)
 
                 print("Exit code:", result.returncode)
 
