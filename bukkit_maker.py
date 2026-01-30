@@ -7,7 +7,7 @@ from tkinter import filedialog, messagebox, font as ft
 
 # ------------- 기본 변수
 
-version = 'v1.9.3'
+version = 'v1.9.4'
 difficulties = ["평화로움", "쉬움", "보통", "어려움"]
 difficulties_en = ["peaceful", "easy", "normal", "hard"]
 gamemodes = ["서바이벌", "크리에이티브", "모험", "관전"]
@@ -2549,16 +2549,18 @@ if __name__ == "__main__":
     
     apply_theme_to_titlebar(window)
 
+    eula_response = messagebox.askyesno("EULA 동의 여부", "이 제작기를 이용해 버킷을 제작하려면 Minecraft EULA에 동의해야 합니다.\n동의하지 않으실 경우 프로그램이 종료됩니다.\n\n'예'를 클릭하면 Minecraft EULA(https://aka.ms/MinecraftEULA)에 동의한 것으로 간주됩니다.")
+
+    if eula_response == 0:
+        exit()
+
     if check_update(version):
         get_updates()
     else:
         if os.path.exists("updater.exe"): os.remove("updater.exe")
 
     # show_warning("버킷 제작기", "이 제작기를 이용해 버킷을 제작하는 경우, Minecraft EULA에 동의한 것으로 간주됩니다.\n동의하지 않으실 경우 프로그램을 종료해 주세요.")
-    eula_response = messagebox.askyesno("EULA 동의 여부", "이 제작기를 이용해 버킷을 제작하려면 Minecraft EULA에 동의해야 합니다.\n동의하지 않으실 경우 프로그램이 종료됩니다.\n\n'예'를 클릭하면 Minecraft EULA(https://aka.ms/MinecraftEULA)에 동의한 것으로 간주됩니다.")
-
-    if eula_response == 0:
-        exit()
+    
 # 아래 설정을 TRUE로 변경하면 Minecraft EULA(https://aka.ms/MinecraftEULA)에 동의한 것으로 간주됩니다.")
 
     window.mainloop()
