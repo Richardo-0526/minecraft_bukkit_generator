@@ -7,7 +7,7 @@ from tkinter import filedialog, messagebox, font as ft
 
 # ------------- 기본 변수
 
-version = 'v1.9.0'
+version = 'v1.9.1`'
 difficulties = ["평화로움", "쉬움", "보통", "어려움"]
 difficulties_en = ["peaceful", "easy", "normal", "hard"]
 gamemodes = ["서바이벌", "크리에이티브", "모험", "관전"]
@@ -721,18 +721,18 @@ def create():
         with open(f'{dir_path_2}/start.bat', 'w+') as f:
             if java_version == 'java':
                 if selected_bukkit == "Forge" and int(selected_version.split(".")[1]) >= 17:
-                    f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\njava -Xms{selected_min_ram} -Xmx{selected_max_ram} @libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
+                    f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\njava -Xms{selected_min_ram} -Xmx{selected_max_ram} {jvm_custom} @libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
                 elif selected_bukkit == "NeoForge":
-                    f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\njava -Xms{selected_min_ram} -Xmx{selected_max_ram} @libraries/net/neoforged/neoforge/{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
+                    f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\njava -Xms{selected_min_ram} -Xmx{selected_max_ram} {jvm_custom} @libraries/net/neoforged/neoforge/{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
                 else:
-                    f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\njava -Xms{selected_min_ram} -Xmx{selected_max_ram} -jar server.jar nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
+                    f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\njava -Xms{selected_min_ram} -Xmx{selected_max_ram} {jvm_custom} -jar server.jar nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
             else:
                 if selected_bukkit == "Forge" and int(selected_version.split(".")[1]) >= 17:
-                    f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\n"{java_path}" -Xms{selected_min_ram} -Xmx{selected_max_ram} @libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
+                    f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\n"{java_path}" -Xms{selected_min_ram} -Xmx{selected_max_ram} {jvm_custom} @libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
                 elif selected_bukkit == "NeoForge":
-                    f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\n"{java_path}" -Xms{selected_min_ram} -Xmx{selected_max_ram} @libraries/net/neoforged/neoforge/{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
+                    f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\n"{java_path}" -Xms{selected_min_ram} -Xmx{selected_max_ram} {jvm_custom} @libraries/net/neoforged/neoforge/{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
                 else:
-                    f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\n"{java_path}" -Xms{selected_min_ram} -Xmx{selected_max_ram} -jar server.jar nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
+                    f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\n"{java_path}" -Xms{selected_min_ram} -Xmx{selected_max_ram} {jvm_custom} -jar server.jar nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
             f.close()
         progress_text.config(text="실행 파일 생성 완료")
 
@@ -2551,11 +2551,16 @@ if __name__ == "__main__":
     
     apply_theme_to_titlebar(window)
 
-    show_warning("버킷 제작기", "이 제작기를 이용해 버킷을 제작하는 경우, Minecraft EULA에 동의한 것으로 간주됩니다.\n동의하지 않으실 경우 프로그램을 종료해 주세요.")
-
     if check_update(version):
         get_updates()
     else:
         if os.path.exists("updater.exe"): os.remove("updater.exe")
+
+    # show_warning("버킷 제작기", "이 제작기를 이용해 버킷을 제작하는 경우, Minecraft EULA에 동의한 것으로 간주됩니다.\n동의하지 않으실 경우 프로그램을 종료해 주세요.")
+    eula_response = messagebox.askyesno("EULA 동의 여부", "이 제작기를 이용해 버킷을 제작하려면 Minecraft EULA에 동의해야 합니다.\n동의하지 않으실 경우 프로그램이 종료됩니다.\n\n'예'를 클릭하면 Minecraft EULA(https://aka.ms/MinecraftEULA)에 동의한 것으로 간주됩니다.")
+
+    if eula_response == 0:
+        exit()
+# 아래 설정을 TRUE로 변경하면 Minecraft EULA(https://aka.ms/MinecraftEULA)에 동의한 것으로 간주됩니다.")
 
     window.mainloop()
