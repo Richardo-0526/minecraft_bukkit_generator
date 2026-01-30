@@ -1,4 +1,4 @@
-import tkinter as tk, tkinter.ttk as ttk, requests, xmltodict, os, shutil as su, re, sv_ttk, darkdetect, pywinstyles, sys, base64, zlib, tempfile, configparser as cp, codecs, chardet, threading, subprocess
+import tkinter as tk, tkinter.ttk as ttk, requests, xmltodict, os, shutil as su, re, sv_ttk, darkdetect, pywinstyles, sys, base64, zlib, tempfile, configparser as cp, codecs, chardet, threading, subprocess, shutil, platform, time
 from packaging.version import Version
 from packaging import version as vv
 from PIL import ImageTk, Image
@@ -7,7 +7,7 @@ from tkinter import filedialog, messagebox, font as ft
 
 # ------------- 기본 변수
 
-version = 'v1.8.0'
+version = 'v1.9.0'
 difficulties = ["평화로움", "쉬움", "보통", "어려움"]
 difficulties_en = ["peaceful", "easy", "normal", "hard"]
 gamemodes = ["서바이벌", "크리에이티브", "모험", "관전"]
@@ -35,11 +35,93 @@ server_f_status = True
 plugins_status = False
 mods_status = False
 
+jvm_custom = ""
+
 logs = ""
 
 bukkit_list = ["Vanilla", "Paper", "Purpur", "Plazma", "Leaves", "Pufferfish", "Folia", "Forge", "NeoForge", "Fabric", "Mohist", "CatServer", "Arclight", "Velocity", "SpongeVanilla"]
 
-# ------------- 기본 변수
+# ------------- 하드 코딩 링크
+
+get_manifests = requests.get("https://www.richardo.net/files/bukkits/bukkit_maker_manifests.json")
+
+if get_manifests.status_code != 200:
+    manifests_version = "0-manual_patch"
+    get_manifests = {}
+else:
+    get_manifests = get_manifests.json()
+
+    manifests_version = get_manifests['versions']
+
+adoptium_release_api = get_manifests["adoptium"]["release_api"] if (get_manifests.get("adoptium") != None) and (get_manifests["adoptium"].get("release_api") != None) else "https://api.adoptium.net/v3/info/available_releases"
+adoptium_download_api = get_manifests["adoptium"]["download_api"] if (get_manifests.get("adoptium") != None) and (get_manifests["adoptium"].get("download_api") != None) else "https://api.adoptium.net/v3/installer/latest/{suitable_version}/ga/windows/{arch}/jdk/hotspot/normal/eclipse"
+
+bukkit_updater_url = get_manifests["bukkit"]["updater_url"] if (get_manifests.get("bukkit") != None) and (get_manifests["bukkit"].get("updater_url") != None) else "https://www.richardo.net/files/bukkits/updater.exe"
+bukkit_update_versions_url = get_manifests["bukkit"]["update_versions_url"] if (get_manifests.get("bukkit") != None) and (get_manifests["bukkit"].get("update_versions_url") != None) else "https://www.richardo.net/files/bukkits"
+
+# bukkit_api
+
+paper_get_jar_api = get_manifests["paper"]["get_jar_api"] if (get_manifests.get("paper") != None) and (get_manifests["paper"].get("get_jar_api") != None) else "https://api.papermc.io/v2/projects/paper/versions/{selected_version}/builds/{selected_build}/downloads/paper-{selected_version}-{selected_build}.jar"
+folia_get_jar_api = get_manifests["folia"]["get_jar_api"] if (get_manifests.get("folia") != None) and (get_manifests["folia"].get("get_jar_api") != None) else "https://api.papermc.io/v2/projects/folia/versions/{selected_version}/builds/{selected_build}/downloads/folia-{selected_version}-{selected_build}.jar"
+velocity_get_jar_api = get_manifests["velocity"]["get_jar_api"] if (get_manifests.get("velocity") != None) and (get_manifests["velocity"].get("get_jar_api") != None) else "https://api.papermc.io/v2/projects/velocity/versions/{selected_version}/builds/{selected_build}/downloads/velocity-{selected_version}-{selected_build}.jar"
+leaves_get_jar_api = get_manifests["leaves"]["get_jar_api"] if (get_manifests.get("leaves") != None) and (get_manifests["leaves"].get("get_jar_api") != None) else "https://api.leavesmc.org/v2/projects/leaves/versions/{selected_version}/builds/{selected_build}/downloads/leaves-{selected_version}-{selected_build}.jar"
+purpur_get_jar_api = get_manifests["purpur"]["get_jar_api"] if (get_manifests.get("purpur") != None) and (get_manifests["purpur"].get("get_jar_api") != None) else "https://api.purpurmc.org/v2/purpur/{selected_version}/{selected_build}/download"
+vanilla_versions_api = get_manifests["vanilla"]["versions_api"] if (get_manifests.get("vanilla") != None) and (get_manifests["vanilla"].get("versions_api") != None) else "https://launchermeta.mojang.com/mc/game/version_manifest.json"
+
+forge_get_jar_api = get_manifests["forge"]["get_jar_api"] if (get_manifests.get("forge") != None) and (get_manifests["forge"].get("get_jar_api") != None) else "https://maven.minecraftforge.net/net/minecraftforge/forge/{selected_version}-{selected_build}/forge-{selected_version}-{selected_build}-installer.jar"
+fabric_versions_api = get_manifests["fabric"]["versions_api"] if (get_manifests.get("fabric") != None) and (get_manifests["fabric"].get("versions_api") != None) else "https://meta.fabricmc.net/v2/versions/installer"
+fabric_get_jar_api = get_manifests["fabric"]["get_jar_api"] if (get_manifests.get("fabric") != None) and (get_manifests["fabric"].get("get_jar_api") != None) else "https://meta.fabricmc.net/v2/versions/loader/{selected_version}/{selected_build}/{installer_version[0]}/server/jar"
+
+mohist_get_jar_api = get_manifests["mohist"]["get_jar_api"] if (get_manifests.get("mohist") != None) and (get_manifests["mohist"].get("get_jar_api") != None) else "https://api.mohistmc.com/project/mohist/{selected_version}/builds/{selected_build}/download"
+neoforge_get_jar_api = get_manifests["neoforge"]["get_jar_api"] if (get_manifests.get("neoforge") != None) and (get_manifests["neoforge"].get("get_jar_api") != None) else "https://maven.neoforged.net/releases/net/neoforged/neoforge/{selected_build}/neoforge-{selected_build}-installer.jar"
+
+plazma_get_jar_19_20_12_api = get_manifests["plazma"]["get_jar_19_20_12_api"] if (get_manifests.get("plazma") != None) and (get_manifests["plazma"].get("get_jar_19_20_12_api") != None) else "https://dl.plazmamc.org/{selected_version}/1"
+plazma_get_jar_21_4_api = get_manifests["plazma"]["get_jar_21_4_api"] if (get_manifests.get("plazma") != None) and (get_manifests["plazma"].get("get_jar_21_4_api") != None) else f"https://ci.codemc.io/job/PlazmaMC/job/Plazma/job/ver%252F1.21.4/lastSuccessfulBuild/artifact/build/libs/plazma-paperclip-1.21.4-R0.1-SNAPSHOT-mojmap.jar"
+plazma_get_jar_21_8_api = get_manifests["plazma"]["get_jar_21_8_api"] if (get_manifests.get("plazma") != None) and (get_manifests["plazma"].get("get_jar_21_8_api") != None) else f"https://ci.codemc.io/job/PlazmaMC/job/Plazma/job/ver%2F1.21.8/46/artifact/plazma-server/build/libs/plazma-paperclip-1.21.8-R0.1-SNAPSHOT-mojmap.jar"
+plazma_get_jar_default_api = get_manifests["plazma"]["get_jar_default_api"] if (get_manifests.get("plazma") != None) and (get_manifests["plazma"].get("get_jar_default_api") != None) else "https://dl.plazmamc.org/{selected_version}"
+
+catserver_get_jar_18_2_api = get_manifests["catserver"]["get_jar_18_2_api"] if (get_manifests.get("catserver") != None) and (get_manifests["catserver"].get("get_jar_18_2_api") != None) else "https://catmc.org/download/catserver_1_18_2"
+catserver_get_jar_16_5_api = get_manifests["catserver"]["get_jar_16_5_api"] if (get_manifests.get("catserver") != None) and (get_manifests["catserver"].get("get_jar_16_5_api") != None) else "https://catmc.org/download/catserver_1_16_5"
+catserver_get_jar_12_2_api = get_manifests["catserver"]["get_jar_12_2_api"] if (get_manifests.get("catserver") != None) and (get_manifests["catserver"].get("get_jar_12_2_api") != None) else "https://catserver.moe/download/universal"
+
+arclight_versions_api = get_manifests["arclight"]["versions_api"] if (get_manifests.get("arclight") != None) and (get_manifests["arclight"].get("versions_api") != None) else "https://files.hypoglycemia.icu/v1/files/arclight/minecraft/{selected_version}"
+pufferfish_get_jar_api = get_manifests["pufferfish"]["get_jar_api"] if (get_manifests.get("pufferfish") != None) and (get_manifests["pufferfish"].get("get_jar_api") != None) else "https://ci.pufferfish.host/job/Pufferfish-1.{selected_version.split('.')[1]}/lastSuccessfulBuild/artifact/build/libs/pufferfish-paperclip-{selected_version}-R0.1-SNAPSHOT-mojmap.jar"
+spongevanilla_get_jar_api = get_manifests["spongevanilla"]["get_jar_api"] if (get_manifests.get("spongevanilla") != None) and (get_manifests["spongevanilla"].get("get_jar_api") != None) else "https://repo.spongepowered.org/repository/maven-releases/org/spongepowered/spongevanilla/{selected_build}/spongevanilla-{selected_build}-universal.jar"
+
+paper_get_build_api = get_manifests["paper"]["get_build_api"] if (get_manifests.get("paper") != None) and (get_manifests["paper"].get("get_build_api") != None) else "https://api.papermc.io/v2/projects/paper/versions/{selected_version}"
+folia_get_build_api = get_manifests["folia"]["get_build_api"] if (get_manifests.get("folia") != None) and (get_manifests["folia"].get("get_build_api") != None) else "https://api.papermc.io/v2/projects/folia/versions/{selected_version}"
+velocity_get_build_api = get_manifests["velocity"]["get_build_api"] if (get_manifests.get("velocity") != None) and (get_manifests["velocity"].get("get_build_api") != None) else "https://api.papermc.io/v2/projects/velocity/versions/{selected_version}"
+leaves_get_build_api = get_manifests["leaves"]["get_build_api"] if (get_manifests.get("leaves") != None) and (get_manifests["leaves"].get("get_build_api") != None) else "https://api.leavesmc.org/v2/projects/leaves/versions/{selected_version}"
+purpur_get_build_api = get_manifests["purpur"]["get_build_api"] if (get_manifests.get("purpur") != None) and (get_manifests["purpur"].get("get_build_api") != None) else "https://api.purpurmc.org/v2/purpur/{selected_version}"
+forge_get_build_api = get_manifests["forge"]["get_build_api"] if (get_manifests.get("forge") != None) and (get_manifests["forge"].get("get_build_api") != None) else "https://maven.minecraftforge.net/net/minecraftforge/forge/maven-metadata.xml"
+fabric_get_build_api = get_manifests["fabric"]["get_build_api"] if (get_manifests.get("fabric") != None) and (get_manifests["fabric"].get("get_build_api") != None) else "https://meta.fabricmc.net/v1/versions/loader/{selected_version}"
+mohist_get_build_api = get_manifests["mohist"]["get_build_api"] if (get_manifests.get("mohist") != None) and (get_manifests["mohist"].get("get_build_api") != None) else "https://api.mohistmc.com/project/mohist/{selected_version}/builds"
+neoforge_get_build_api = get_manifests["neoforge"]["get_build_api"] if (get_manifests.get("neoforge") != None) and (get_manifests["neoforge"].get("get_build_api") != None) else "https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge"
+arclight_get_build_api = get_manifests["arclight"]["get_build_api"] if (get_manifests.get("arclight") != None) and (get_manifests["arclight"].get("get_build_api") != None) else "https://files.hypoglycemia.icu/v1/files/arclight/minecraft/{selected_version}"
+spongevanilla_get_build_api = get_manifests["spongevanilla"]["get_build_api"] if (get_manifests.get("spongevanilla") != None) and (get_manifests["spongevanilla"].get("get_build_api") != None) else "https://dl-api.spongepowered.org/v2/groups/org.spongepowered/artifacts/spongevanilla/versions?tags=,minecraft:{selected_version}"
+
+paper_get_version_api = get_manifests["paper"]["get_version_api"] if (get_manifests.get("paper") != None) and (get_manifests["paper"].get("get_version_api") != None) else "https://api.papermc.io/v2/projects/paper"
+folia_get_version_api = get_manifests["folia"]["get_version_api"] if (get_manifests.get("folia") != None) and (get_manifests["folia"].get("get_version_api") != None) else "https://api.papermc.io/v2/projects/folia"
+velocity_get_version_api = get_manifests["velocity"]["get_version_api"] if (get_manifests.get("velocity") != None) and (get_manifests["velocity"].get("get_version_api") != None) else "https://api.papermc.io/v2/projects/velocity"
+leaves_get_version_api = get_manifests["leaves"]["get_version_api"] if (get_manifests.get("leaves") != None) and (get_manifests["leaves"].get("get_version_api") != None) else "https://api.leavesmc.org/v2/projects/leaves"
+purpur_get_version_api = get_manifests["purpur"]["get_version_api"] if (get_manifests.get("purpur") != None) and (get_manifests["purpur"].get("get_version_api") != None) else "https://api.purpurmc.org/v2/purpur"
+forge_get_version_api = get_manifests["forge"]["get_version_api"] if (get_manifests.get("forge") != None) and (get_manifests["forge"].get("get_version_api") != None) else "https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json"
+fabric_get_version_api = get_manifests["fabric"]["get_version_api"] if (get_manifests.get("fabric") != None) and (get_manifests["fabric"].get("get_version_api") != None) else "https://meta.fabricmc.net/v2/versions/game"
+mohist_get_version_api = get_manifests["mohist"]["get_version_api"] if (get_manifests.get("mohist") != None) and (get_manifests["mohist"].get("get_version_api") != None) else "https://mohistmc.com/api/v2/projects/mohist"
+neoforge_get_version_api = get_manifests["neoforge"]["get_version_api"] if (get_manifests.get("neoforge") != None) and (get_manifests["neoforge"].get("get_version_api") != None) else "https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge"
+plazma_versions = get_manifests["plazma"]["versions"] if (get_manifests.get("plazma") != None) and (get_manifests["plazma"].get("versions") != None) else ["1.21.8", "1.21.4", "1.21.3", "1.21.1", "1.20.6", "1.20.4", "1.20.2", "1.20.1", "1.19.4"]
+catserver_versions = get_manifests["catserver"]["versions"] if (get_manifests.get("catserver") != None) and (get_manifests["catserver"].get("versions") != None) else ["1.18.2", "1.16.5", "1.12.2"]
+pufferfish_versions = get_manifests["pufferfish"]["versions"] if (get_manifests.get("pufferfish") != None) and (get_manifests["pufferfish"].get("versions") != None) else ["1.21.3", "1.20.4", "1.19.4", "1.18.2", "1.17.1"]
+arclight_get_version_api = get_manifests["arclight"]["get_version_api"] if (get_manifests.get("arclight") != None) and (get_manifests["arclight"].get("get_version_api") != None) else "https://files.hypoglycemia.icu/v1/files/arclight/minecraft"
+spongevanilla_get_version_api = get_manifests["spongevanilla"]["get_version_api"] if (get_manifests.get("spongevanilla") != None) and (get_manifests["spongevanilla"].get("get_version_api") != None) else "https://dl-api.spongepowered.org/v2/groups/org.spongepowered/artifacts/spongevanilla"
+
+modrinth_download_api = get_manifests["modrinth"]["download_api"] if (get_manifests.get("modrinth") != None) and (get_manifests["modrinth"].get("download_api") != None) else "https://api.modrinth.com/v2/version/{id}"
+modrinth_search_plugins_version_api = get_manifests["modrinth"]["search_plugins_version_api"] if (get_manifests.get("modrinth") != None) and (get_manifests["modrinth"].get("search_plugins_version_api") != None) else "https://api.modrinth.com/v2/project/{id}/version?loaders=[\"bukkit\", \"paper\"]&game_versions=[\"{versions}\"]"
+modrinth_search_mods_version_api = get_manifests["modrinth"]["search_mods_version_api"] if (get_manifests.get("modrinth") != None) and (get_manifests["modrinth"].get("search_mods_version_api") != None) else "https://api.modrinth.com/v2/project/{id}/version?loaders=[\"{loaders}\"]&game_versions=[\"{versions}\"]"
+modrinth_search_plugins_api = get_manifests["modrinth"]["search_plugins_api"] if (get_manifests.get("modrinth") != None) and (get_manifests["modrinth"].get("search_plugins_api") != None) else "https://api.modrinth.com/v2/search?query={query}&facets=[[\"categories:bukkit\",\"categories:paper\"],[\"project_type:plugin\"],[\"versions:{versions}\"]]&limit=20"
+monrinth_search_mods_api = get_manifests["modrinth"]["search_mods_api"] if (get_manifests.get("modrinth") != None) and (get_manifests["modrinth"].get("search_mods_api") != None) else "https://api.modrinth.com/v2/search?query={query}&facets=[[\"categories:{loader}\"],[\"project_type:mod\"],[\"versions:{versions}\"],[\"server_side:optional\",\"server_side:required\"]]&limit=20"
+
+# ------------- 하드 코딩 링크
 
 def show_message(title: str, message: str) -> None:
     root = tk.Tk()
@@ -89,7 +171,7 @@ with open(ICON_PATH, 'wb') as icon_file:
     icon_file.write(ICON)
 
 def get_versions() -> list:
-    response = requests.get(f'https://www.richardo.net/files/bukkits')
+    response = requests.get(bukkit_update_versions_url)
     result = response.json()
     for i in range(len(result)):
         result[i] = result[i].split("_")[2].replace(".exe", "")
@@ -105,13 +187,33 @@ def check_update(now_version: str) -> bool:
         return True
     return False
 
+def get_java_available_releases() -> list[int]:
+    '''adoptium API를 사용하여 사용 가능한 Java 릴리즈 버전을 가져옵니다.'''
+    url = adoptium_release_api
+    response = requests.get(url)
+    data = response.json()['available_releases']
+    return data
+
+def get_java_url(minimum_version) -> str|bool:
+    '''주어진 최소 Java 버전에 맞는 최신 Java 설치 프로그램 URL을 반환합니다.'''
+    versions = get_java_available_releases()
+    suitable_versions = [v for v in versions if v >= float(minimum_version)]
+    try: suitable_version = suitable_versions[0]
+    except: suitable_version = None
+
+    if suitable_version == None: return False
+
+    arch = 'x64' if platform.machine().endswith('64') else 'x86'
+
+    return adoptium_download_api.format(suitable_version=suitable_version, arch=arch)
+
 def get_updates():
     if check_update(version):
         show_warning("업데이트", f"새로운 업데이트가 있습니다. 업데이트를 진행합니다.")
         if not os.path.exists("updater.exe"):
             # messagebox.showerror("Error", "자동 업데이터 파일이 없어 자동으로 다운로드합니다.")
             show_warning("업데이트", "자동 업데이터 파일을 다운로드합니다.")
-            download("https://www.richardo.net/files/bukkits/updater.exe", ".", "updater.exe")
+            download(bukkit_updater_url, ".", "updater.exe")
 
         os.startfile(f"updater.exe")
         window.destroy()
@@ -297,490 +399,521 @@ def p_var_update(progress: int) -> None:
     p_var.set(progress)
     progress_bar.update()
 
-def create():
-    global logs
-    p_var_update(0)
-    
-    # 설정 변수 불러오기
-    try:
-        selected_bukkit = bukkit_genre.get()
-        selected_version = bukkit_version.get()
-        selected_build = bukkit_build_v.get()
-        selected_min_ram = min_ram_box.get()
-        selected_max_ram = max_ram_box.get()
-        selected_dir = dir_path.get()
-        selected_java = java_dir_path.get()
-    except Exception as e: raise(e)
+def get_java(min_version: int, dir: str = None) -> dict:
+    '''현재 설치되어있는 Java를 탐지하고, min_version 이상인 Java 경로와 버전을 반환합니다.'''
+    oracle = 'C:/Program Files/Java'
+    oracle_x86 = 'C:/Program Files (x86)/Java'
 
-    detail_log_button.config(state=tk.NORMAL)
-    logs = ""
+    zulu = 'C:/Program Files/Zulu'
+    zulu_x86 = 'C:/Program Files (x86)/Zulu'
 
-    p_var_update(10)
-    # 폴더 생성
-    print(selected_bukkit, selected_version, selected_build, selected_min_ram, selected_max_ram, selected_dir)
-    progress_text.config(text="폴더 생성 중 . (1/3) | 폴더 개수 확인")
-    folder_count = len([name for name in os.listdir(selected_dir) if not os.path.isfile(os.path.join(selected_dir, name))])
-    
-    progress_text.config(text="폴더 생성 중 .. (2/3) | 폴더 경로 생성")
-    dir_path_2 = f'{selected_dir}/{folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}'
-    
-    progress_text.config(text="폴더 생성 중 ... (3/3) | 폴더 생성")
-    os.mkdir(dir_path_2)
+    openjdk_microsoft = 'C:/Program Files/Microsoft'
+    openjdk_microsoft_x86 = 'C:/Program Files (x86)/Microsoft'
 
-    progress_text.config(text="폴더 생성 완료")
+    adoptium = 'C:/Program Files/Eclipse Adoptium'
+    adoptium_x86 = 'C:/Program Files (x86)/Eclipse Adoptium'
 
-    p_var_update(20)
-    # 버킷 파일 다운로드
-    progress_text.config(text="버킷 파일 다운로드 중 . (1/2) | 버킷 코어 사이트 설정")
-    if selected_bukkit == "Paper": url = f'https://api.papermc.io/v2/projects/paper/versions/{selected_version}/builds/{selected_build}/downloads/paper-{selected_version}-{selected_build}.jar'
-    elif selected_bukkit == "Folia": url = f'https://api.papermc.io/v2/projects/folia/versions/{selected_version}/builds/{selected_build}/downloads/folia-{selected_version}-{selected_build}.jar'
-    elif selected_bukkit == "Velocity": url = f'https://api.papermc.io/v2/projects/velocity/versions/{selected_version}/builds/{selected_build}/downloads/velocity-{selected_version}-{selected_build}.jar'
-    elif selected_bukkit == "Leaves": url = f'https://api.leavesmc.org/v2/projects/leaves/versions/{selected_version}/builds/{selected_build}/downloads/leaves-{selected_version}-{selected_build}.jar'
-    elif selected_bukkit == "Purpur": url = f'https://api.purpurmc.org/v2/purpur/{selected_version}/{selected_build}/download'
-    elif selected_bukkit == "Vanilla":
-        headers = {
-            'accept': 'application/json',
-        }
+    original_paths = [oracle, oracle_x86, zulu, zulu_x86, openjdk_microsoft, openjdk_microsoft_x86, adoptium, adoptium_x86]
+    if dir is not None:
+        original_paths = [dir]
 
-        response = requests.get('https://launchermeta.mojang.com/mc/game/version_manifest.json', headers=headers)
-        response_json = response.json()
-        versions = response_json["versions"]
+    paths = []
+    java = []
 
-        for i in versions:
-            if i['id'] == selected_version:
-                url = i["url"]
-                break
+    for i in original_paths:
+        if os.path.exists(i):
+            paths.append(i)
+
+    for i in paths:
+        file_list = os.listdir(i)
+        for j in file_list:
+            if '1.8.0' in j:
+                java.append({"status": True, "version": j[3:].replace('_', '.'), "path": f'{i}/{j}/bin/java.exe'})
+            elif j.split('-')[0] == 'jdk' or j.split('-')[0] == 'jre' or j.split('-')[0] == 'zulu':
+                java.append({"status": True, "version": j.split('-')[1], "path": f'{i}/{j}/bin/java.exe'})
         
-        response = requests.get(url, headers=headers)
-        response_json = response.json()
-        url = response_json["downloads"]["server"]["url"] 
-    elif selected_bukkit == "Forge": url = f'https://maven.minecraftforge.net/net/minecraftforge/forge/{selected_version}-{selected_build}/forge-{selected_version}-{selected_build}-installer.jar'
-    elif selected_bukkit == "Fabric":
-        headers = {
-            'accept': 'application/json',
-        }
-
-        response = requests.get('https://meta.fabricmc.net/v2/versions/installer', headers=headers)
-        response_json = response.json()
-        installer_version = []
-
-        for i in range(len(response_json)):
-            installer_version.append(response_json[i]["version"])
-        installer_version.sort(reverse=True, key=Version)
-        # print(installer_version)
-        url = f'https://meta.fabricmc.net/v2/versions/loader/{selected_version}/{selected_build}/{installer_version[0]}/server/jar'
-    elif selected_bukkit == "Mohist": url = f"https://api.mohistmc.com/project/mohist/{selected_version}/builds/{selected_build}/download"
-    elif selected_bukkit == "NeoForge": url = f'https://maven.neoforged.net/releases/net/neoforged/neoforge/{selected_build}/neoforge-{selected_build}-installer.jar'
-    elif selected_bukkit == "Plazma":
-        if selected_version.split(".")[1] == "19" or (selected_version.split(".")[1] == "20" and (selected_version.split(".")[2] == "1" or selected_version.split(".")[2] == "2")):
-            url = f'https://dl.plazmamc.org/{selected_version}/1'
-        elif selected_version.split(".")[1] == "21" and selected_version.split(".")[2] == "4":
-            url = f'https://ci.codemc.io/job/PlazmaMC/job/Plazma/job/dev%252F1.21.4/lastSuccessfulBuild/artifact/build/libs/plazma-paperclip-1.21.4-R0.1-SNAPSHOT-mojmap.jar'
-        else:
-            url = f'https://dl.plazmamc.org/{selected_version}'
-    elif selected_bukkit == "CatServer":
-        if selected_version == "1.18.2": url = f'https://catmc.org/download/catserver_1_18_2'
-        elif selected_version == "1.16.5": url = f'https://catmc.org/download/catserver_1_16_5'
-        elif selected_version == "1.12.2": url = f'https://catserver.moe/download/universal'
-    elif selected_bukkit == "Arclight":
-        headers = {
-            'accept': 'application/json',
-        }
-
-        response = requests.get(f'https://files.hypoglycemia.icu/v1/files/arclight/minecraft/{selected_version}', headers=headers)
-        response_json = response.json()
-        versions = []
-        for i in response_json['files']:
-            if i['name'] == 'loaders':
-                response2 = requests.get(i['link'], headers=headers)
-                break
-
-        response2_json = response2.json()
-        for i in response2_json['files']:
-            if i['name'] == selected_build:
-                response3 = requests.get(i['link'], headers=headers)
-                break
-
-        response3_json = response3.json()
-        for i in response3_json['files']:
-            if i['name'] == 'latest-snapshot':
-                url = i['link']
-                break
-    elif selected_bukkit == "Pufferfish":
-        url = f"https://ci.pufferfish.host/job/Pufferfish-1.{selected_version.split('.')[1]}/lastSuccessfulBuild/artifact/build/libs/pufferfish-paperclip-{selected_version}-R0.1-SNAPSHOT-mojmap.jar"
-    elif selected_bukkit == "SpongeVanilla":
-        url = f"https://repo.spongepowered.org/repository/maven-releases/org/spongepowered/spongevanilla/{selected_build}/spongevanilla-{selected_build}-universal.jar"
-
-    progress_text.config(text="버킷 파일 다운로드 중 .. (2/2) | 다운로드 중")
-    if selected_bukkit == "Forge" or selected_bukkit == "NeoForge": download(url, dir_path_2, f'install.jar')
-    else: download(url, dir_path_2, f'server.jar')
-    progress_text.config(text="버킷 파일 다운로드 완료")
-
-    p_var_update(30)
-    # 자바 경로 설정
-    progress_text.config(text="자바 버전 탐지 중 . (1/5) | 자동 탐지 여부 확인")
-
-    if selected_java == "(자동 탐지)":
-        progress_text.config(text="자바 버전 탐지 중 .. (2/5) | 자바 폴더 자동 탐지 중")
-        if os.path.exists(f'C:/Program Files/Java'): java_path = 'C:/Program Files/Java'
-        elif os.path.exists(f'C:/Program Files (x86)/Java'): java_path = 'C:/Program Files (x86)/Java'
-        else: return show_error("Error", "자바가 탐지되지 않았습니다. 수동으로 자바 경로를 지정해주세요.")
-    else:
-        progress_text.config(text="자바 버전 탐지 중 .. (2/5) | 자바 폴더 경로 확인 중")
-        if 'java.exe' in selected_java: java_path = selected_java.split('/bin/java.exe')[0]
-        else: java_path = selected_java
-    progress_text.config(text="자바 버전 탐지 중 ... (3/5) | 자바 폴더 경로 설정")
+    java.sort(key=lambda x: Version(x['version']))
     
 
-    progress_text.config(text="자바 버전 탐지 중 . (4/5) | 폴더 내 자바 버전 탐지")
-    java_version = os.listdir(java_path)
-    detect = False
-    find = 'false'
+    for i in java:
+        try:
+            if Version(i['version']) >= Version(str(min_version)):
+                return i
+        except:
+            continue
 
+    return {"status": False, "version": min_version, "path": None}
+
+def detect_java(selected_version, selected_java, p_var_update, progress_text, dir_path_2):
     try:
         if int(selected_version.split('.')[0]) == 1:
             if int(selected_version.split('.')[1]) <= 16:
-                for i in java_version:
-                    if '1.8.0' in i:
-                        java_version = i
-                        detect = True
-                        find = 'true'
-                        break
-
-                if find == 'false':
-                    find = '8(1.8)'
+                java = get_java(1.8, dir=f"{selected_java}" if selected_java != "(자동 탐지)" else None)
             elif int(selected_version.split('.')[1]) <= 17:
-
-                for i in java_version:
-                    try:
-                        if Version(i.split('-')[1]) >= Version('16'):
-                            java_version = i
-                            detect = True
-                            find = 'true'
-                            break
-                    except: continue
-
-                if find == 'false':
-                    find = '16'
+                java = get_java(16, dir=f"{selected_java}" if selected_java != "(자동 탐지)" else None)
             elif int(selected_version.split('.')[1]) <= 20:
                 try: int(selected_version.split('.')[2])
                 except: selected_version += ".0"
                 if int(selected_version.split('.')[2]) >= 5:
-
-                    for i in java_version:
-                        try:
-                            if Version(i.split('-')[1]) >= Version('21'):
-                                java_version = i
-                                detect = True
-                                find = 'true'
-                                break
-                        except: continue
-
-                    if find == 'false':
-                        find = '21'
+                    java = get_java(21, dir=f"{selected_java}" if selected_java != "(자동 탐지)" else None)
                 else:
-                    for i in java_version:
-                        try:
-                            if Version(i.split('-')[1]) >= Version('17'):
-                                java_version = i
-                                detect = True
-                                find = 'true'
-                                break
-                        except: continue
-
-                    if find == 'false':
-                        find = '17'
+                    java = get_java(17, dir=f"{selected_java}" if selected_java != "(자동 탐지)" else None)
+            elif int(selected_version.split('.')[1]) <= 21:
+                java = get_java(21, dir=f"{selected_java}" if selected_java != "(자동 탐지)" else None)
             else:
-                for i in java_version:
-                    try:
-                        if Version(i.split('-')[1]) >= Version('21'):
-                            java_version = i
-                            detect = True
-                            find = 'true'
-                            break
-                    except: continue
-
-                if find == 'false':
-                    find = '21'
+                java = get_java(25, dir=f"{selected_java}" if selected_java != "(자동 탐지)" else None)
         else:
-            for i in java_version:
-                try:
-                    if Version(i.split('-')[1]) >= Version('25'):
-                        java_version = i
-                        detect = True
-                        find = 'true'
-                        break
-                except: continue
-
-            if find == 'false':
-                find = '25'
+            java = get_java(25, dir=(f"{selected_java}" if selected_java != "(자동 탐지)" else None))
     except:
         try:
             if int(selected_version.split('w')[0]) <= 21:
                 if int((selected_version.split('w')[1]).replace('a', '')) >= 19:
-                    for i in java_version:
-                        try:
-                            if Version(i.split('-')[1]) >= Version('16'):
-                                java_version = i
-                                detect = True
-                                find = 'true'
-                                break
-                        except: continue
-
-                    if find == 'false':
-                        find = '16'
+                    java = get_java(16, dir=f"{selected_java}" if selected_java != "(자동 탐지)" else None)
                 else:
-                    for i in java_version:
-                        if '1.8.0' in i:
-                            java_version = i
-                            detect = True
-                            find = 'true'
-                            break
-
-                    if find == 'false':
-                        find = '8(1.8)'
+                    java = get_java(1.8, dir=f"{selected_java}" if selected_java != "(자동 탐지)" else None)
             elif int(selected_version.split('w')[0]) <= 24:
                 if int((selected_version.split('w')[1]).replace('a', '')) >= 14:
-                    for i in java_version:
-                        try:
-                            if Version(i.split('-')[1]) >= Version('21'):
-                                java_version = i
-                                detect = True
-                                find = 'true'
-                                break
-                        except: continue
-
-                    if find == 'false':
-                        find = '21'
+                    java = get_java(21, dir=f"{selected_java}" if selected_java != "(자동 탐지)" else None)
                 else:
-                    for i in java_version:
-                        try:
-                            if Version(i.split('-')[1]) >= Version('17'):
-                                java_version = i
-                                detect = True
-                                find = 'true'
-                                break
-                        except: continue
-
-                    if find == 'false':
-                        find = '17'
+                    java = get_java(17, dir=f"{selected_java}" if selected_java != "(자동 탐지)" else None)
             else:
-                for i in java_version:
-                    try:
-                        if Version(i.split('-')[1]) >= Version('21'):
-                            java_version = i
-                            detect = True
-                            find = 'true'
-                            break
-                    except: continue
-
-                if find == 'false':
-                    find = '21'
+                java = get_java(21, dir=f"{selected_java}" if selected_java != "(자동 탐지)" else None)
         except:
-            detect = False
-
-    if find != 'true':
-        java_version = 'java'
-        show_warning("경고", f"선택한 마인크래프트 버전({selected_version})은 Java {find} 이상을 요구하지만, 탐지할 수 없습니다.")
-
-    if detect == False:
-        java_version = 'java'
-        show_warning("경고", "자바 버전 탐지에 실패하여 기본 자바 경로로 설정됩니다. 자바 경로를 수동으로 지정하는 것을 권장합니다.")
-
-    progress_text.config(text="자바 버전 탐지 중 .. (5/5) | 자바 파일 경로 설정")
-    java_path = f'{java_path}/{java_version}/bin/java.exe'
-
-    progress_text.config(text="자바 버전 탐지 완료")
-
-    p_var_update(40)
-    # 실행 파일 생성
-    progress_text.config(text="실행 파일 생성 중 . (1/1) | 실행 파일 생성 중")
-    with open(f'{dir_path_2}/start.bat', 'w+') as f:
-        if java_version == 'java':
-            if selected_bukkit == "Forge" and int(selected_version.split(".")[1]) >= 17:
-                f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\njava -Xms{selected_min_ram} -Xmx{selected_max_ram} @libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
-            elif selected_bukkit == "NeoForge":
-                f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\njava -Xms{selected_min_ram} -Xmx{selected_max_ram} @libraries/net/neoforged/neoforge/{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
-            else:
-                f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\njava -Xms{selected_min_ram} -Xmx{selected_max_ram} -jar server.jar nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
-        else:
-            if selected_bukkit == "Forge" and int(selected_version.split(".")[1]) >= 17:
-                f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\n"{java_path}" -Xms{selected_min_ram} -Xmx{selected_max_ram} @libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
-            elif selected_bukkit == "NeoForge":
-                f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\n"{java_path}" -Xms{selected_min_ram} -Xmx{selected_max_ram} @libraries/net/neoforged/neoforge/{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
-            else:
-                f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\n"{java_path}" -Xms{selected_min_ram} -Xmx{selected_max_ram} -jar server.jar nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
-        f.close()
-    progress_text.config(text="실행 파일 생성 완료")
-
-    if selected_bukkit == "Forge" or selected_bukkit == "NeoForge":
-        progress_text.config(text="(Neo)Forge 실행 파일 생성 중 . (1/1) | 실행 파일 생성 중 ( 세부 로그 버튼을 눌러 진행 상황 확인 가능 )")
-        os.chdir(dir_path_2)
-        if java_version == 'java':
-            # os.system(f'java -jar install.jar --installServer')
-            f = subprocess.Popen(['java', '-jar', 'install.jar', '--installServer'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        else:
-            # os.system(fr'""{java_path}" -jar install.jar" --installServer')
-            f = subprocess.Popen([f'{java_path}', '-jar', 'install.jar', '--installServer'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-
-        while f.poll() is None:
-            line = f.stdout.readline()
-            if len(logs) > 1000:
-                logs = ""
-            try: update_logs_box(line.decode('utf-8').strip())
-            except UnicodeDecodeError:
-                try: update_logs_box(line.decode('cp949').strip())
-                except: pass
-
-        os.remove(f'install.jar')
-        if int(selected_version.split(".")[1]) <= 16:
-            for i in os.listdir(dir_path_2):
-                if 'forge-' in i and '.jar' in i:
-                    os.rename(i, 'server.jar')
-                    break
-        else: pass
-        progress_text.config(text="(Neo)Forge 실행 파일 생성 완료")
-
-    p_var_update(50)
-    # 생성 파일 삭제
-    progress_text.config(text="기타 생성 파일 삭제 중 . (1/2) | run.bat 탐지 및 삭제 중")
-    if os.path.exists(f'{dir_path_2}/run.bat'): os.remove(f'{dir_path_2}/run.bat')
-    progress_text.config(text="기타 생성 파일 삭제 중 . (2/2) | run.bat 탐지 및 삭제 중")
-    if os.path.exists(f'{dir_path_2}/run.sh'): os.remove(f'{dir_path_2}/run.sh')
-    progress_text.config(text="기타 생성 파일 삭제 완료")
-
-    p_var_update(60)
-
+            return False
     
-    logs = ""
-    # eula 허용
-    if not (selected_bukkit == "Mohist" or selected_bukkit == "CatServer"):
-        progress_text.config(text="Eula 허용 중 . (1/5) | 버킷 폴더 경로 지정")
-        os.chdir(dir_path_2)
+    return java
 
-        progress_text.config(text="Eula 허용 중 .. (2/5) | 서버 실행 중 ( 시간이 소요됩니다 )")
-        if java_version == 'java':
-            if selected_bukkit == "Forge" and int(selected_version.split(".")[1]) >= 17:
-                # os.system(f'java @libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt %* nogui')
-                p = subprocess.Popen(['java', f'@libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt', '%*', 'nogui'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-            elif selected_bukkit == "NeoForge":
-                # os.system(f'java @libraries/net/neoforged/neoforge/{selected_build}/win_args.txt %* nogui')
-                p = subprocess.Popen(['java', f'@libraries/net/neoforged/neoforge/{selected_build}/win_args.txt', '%*', 'nogui'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-            else:
-                # os.system(f'java -jar server.jar nogui')
-                p = subprocess.Popen(['java', '-jar', 'server.jar', 'nogui'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        else:
-            if selected_bukkit == "Forge" and int(selected_version.split(".")[1]) >= 17:
-                # os.system(f'"{java_path}" @libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt %* nogui')
-                p = subprocess.Popen([f'{java_path}', f'@libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt', '%*', 'nogui'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-            elif selected_bukkit == "NeoForge":
-                # os.system(f'"{java_path}" @libraries/net/neoforged/neoforge/{selected_build}/win_args.txt %* nogui')
-                p = subprocess.Popen([f'{java_path}', f'@libraries/net/neoforged/neoforge/{selected_build}/win_args.txt', '%*', 'nogui'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-            else:
-                # os.system(f'"{java_path}" -jar server.jar nogui')
-                p = subprocess.Popen([f'{java_path}', '-jar', 'server.jar', 'nogui'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+def create():
+    try:
+        global logs
+        p_var_update(0)
+        
+        # 설정 변수 불러오기
+        try:
+            selected_bukkit = bukkit_genre.get()
+            selected_version = bukkit_version.get()
+            selected_build = bukkit_build_v.get()
+            selected_min_ram = min_ram_box.get()
+            selected_max_ram = max_ram_box.get()
+            selected_dir = dir_path.get()
+            selected_java = java_dir_path.get()
+        except Exception as e: raise(e)
+
+        detail_log_button.config(state=tk.NORMAL)
+        create_button.config(state=tk.DISABLED)
+        logs = ""
+
+        p_var_update(10)
+        # 폴더 생성
+        print(selected_bukkit, selected_version, selected_build, selected_min_ram, selected_max_ram, selected_dir)
+        progress_text.config(text="폴더 생성 중 . (1/3) | 폴더 개수 확인")
+        folder_count = len([name for name in os.listdir(selected_dir) if not os.path.isfile(os.path.join(selected_dir, name))])
+        
+        progress_text.config(text="폴더 생성 중 .. (2/3) | 폴더 경로 생성")
+        dir_path_2 = f'{selected_dir}/{folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}'
+        
+        progress_text.config(text="폴더 생성 중 ... (3/3) | 폴더 생성")
+        os.mkdir(dir_path_2)
+
+        progress_text.config(text="폴더 생성 완료")
+
+        p_var_update(20)
+        # 버킷 파일 다운로드
+        progress_text.config(text="버킷 파일 다운로드 중 . (1/2) | 버킷 코어 사이트 설정")
+        if selected_bukkit == "Paper": url = paper_get_jar_api.format(selected_version=selected_version, selected_build=selected_build)
+        elif selected_bukkit == "Folia": url = folia_get_jar_api.format(selected_version=selected_version, selected_build=selected_build)
+        elif selected_bukkit == "Velocity": url = velocity_get_jar_api.format(selected_version=selected_version, selected_build=selected_build)
+        elif selected_bukkit == "Leaves": url = leaves_get_jar_api.format(selected_version=selected_version, selected_build=selected_build)
+        elif selected_bukkit == "Purpur": url = purpur_get_jar_api.format(selected_version=selected_version, selected_build=selected_build)
+        elif selected_bukkit == "Vanilla":
+            headers = {
+                'accept': 'application/json',
+            }
+
+            response = requests.get(vanilla_versions_api, headers=headers)
+            response_json = response.json()
+            versions = response_json["versions"]
+
+            for i in versions:
+                if i['id'] == selected_version:
+                    url = i["url"]
+                    break
             
-        while p.poll() is None:
-            line = p.stdout.readline()
-            try: update_logs_box(line.decode('utf-8').strip())
-            except UnicodeDecodeError:
-                try: update_logs_box(line.decode('cp949').strip())
-                except: print("?")
+            response = requests.get(url, headers=headers)
+            response_json = response.json()
+            url = response_json["downloads"]["server"]["url"] 
 
-        progress_text.config(text="Eula 허용 중 ... (3/5) | eula.txt 읽기 중")
-        with open(f'{dir_path_2}/eula.txt', 'r') as f:
-            eula = f.read()
+        elif selected_bukkit == "Forge": url = forge_get_jar_api.format(selected_version=selected_version, selected_build=selected_build)
+        elif selected_bukkit == "Fabric":
+            headers = {
+                'accept': 'application/json',
+            }
+
+            response = requests.get(fabric_versions_api, headers=headers)
+            response_json = response.json()
+            installer_version = []
+
+            for i in range(len(response_json)):
+                installer_version.append(response_json[i]["version"])
+            installer_version.sort(reverse=True, key=Version)
+            # print(installer_version)
+            url = fabric_get_jar_api.format(selected_version=selected_version, selected_build=selected_build, installer_version=installer_version)
+#  ----------------------------
+
+        elif selected_bukkit == "Mohist": url = mohist_get_jar_api.format(selected_version=selected_version, selected_build=selected_build)
+        elif selected_bukkit == "NeoForge": url = neoforge_get_jar_api.format(selected_build=selected_build)
+        elif selected_bukkit == "Plazma":
+            if selected_version.split(".")[1] == "19" or (selected_version.split(".")[1] == "20" and (selected_version.split(".")[2] == "1" or selected_version.split(".")[2] == "2")): url = plazma_get_jar_19_20_12_api.format(selected_version=selected_version)
+            elif selected_version.split(".")[1] == "21" and selected_version.split(".")[2] == "4": url = plazma_get_jar_21_4_api
+            elif selected_version.split(".")[1] == "21" and selected_version.split(".")[2] == "8": url = plazma_get_jar_21_8_api
+            else: url = plazma_get_jar_default_api.format(selected_version=selected_version)
+        elif selected_bukkit == "CatServer":
+            if selected_version == "1.18.2": url = catserver_get_jar_18_2_api
+            elif selected_version == "1.16.5": url = catserver_get_jar_16_5_api
+            elif selected_version == "1.12.2": url = catserver_get_jar_12_2_api
+        elif selected_bukkit == "Arclight":
+            headers = {
+                'accept': 'application/json',
+            }
+
+            response = requests.get(arclight_versions_api.format(selected_version=selected_version), headers=headers)
+            response_json = response.json()
+            versions = []
+            for i in response_json['files']:
+                if i['name'] == 'loaders':
+                    response2 = requests.get(i['link'], headers=headers)
+                    break
+
+            response2_json = response2.json()
+            for i in response2_json['files']:
+                if i['name'] == selected_build:
+                    response3 = requests.get(i['link'], headers=headers)
+                    break
+
+            response3_json = response3.json()
+            for i in response3_json['files']:
+                if i['name'] == 'latest-snapshot':
+                    url = i['link']
+                    break
+        elif selected_bukkit == "Pufferfish": url = pufferfish_get_jar_api.format(selected_version=selected_version)
+        elif selected_bukkit == "SpongeVanilla": url = spongevanilla_get_jar_api.format(selected_build=selected_build)
+
+        progress_text.config(text="버킷 파일 다운로드 중 .. (2/2) | 다운로드 중")
+        if selected_bukkit == "Forge" or selected_bukkit == "NeoForge": download(url, dir_path_2, f'install.jar')
+        else: download(url, dir_path_2, f'server.jar')
+        progress_text.config(text="버킷 파일 다운로드 완료")
+
+        p_var_update(30)
+        # 자바 경로 설정
+        progress_text.config(text="자바 버전 탐지 중 . (1/2) | 폴더 내 자바 버전 탐지")
+
+        # 자바 자동 탐지
+        java = detect_java(selected_version, selected_java, p_var_update, progress_text, dir_path_2)
+
+        if java == False:
+            p_var_update(0)
+            progress_text.config(text="대기 중")
+            try: shutil.rmtree(dir_path_2)
+            except:
+                if selected_java == "(자동 탐지)": return show_warning("경고", f"Java 자동 탐지 과정에서 오류가 발생하여 버킷 제작을 중지합니다.\n폴더를 삭제하는 과정에서 오류가 발생하여, 폴더를 삭제하지 못하였습니다.")
+                else: return show_warning("경고", f"Java 자동 탐지 과정에서 오류가 발생하여 버킷 제작을 중지합니다.\n자바 경로가 올바른 형태로 되어있는지, (jdk,jre,zulu-version) 형태로 되어있는지 확인해주세요.\n폴더를 삭제하는 과정에서 오류가 발생하여, 폴더를 삭제하지 못하였습니다.")
+            else:
+                if selected_java == "(자동 탐지)": return show_warning("경고", f"Java 자동 탐지 과정에서 오류가 발생하여 버킷 제작을 중지합니다.버킷 제작을 중지하고 폴더를 삭제합니다.")
+                else: return show_warning("경고", f"Java 자동 탐지 과정에서 오류가 발생하여 버킷 제작을 중지합니다.\n자바 경로가 올바른 형태로 되어있는지, (jdk,jre,zulu-version) 형태로 되어있는지 확인해주세요.\n버킷 제작을 중지하고 폴더를 삭제합니다.")
+
+        if java['status'] == False:
+            java_version = None
+            if selected_java == "(자동 탐지)":
+                response = messagebox.askyesnocancel(title="경고", message=f"선택한 마인크래프트 버전({selected_version})에 대응하는 Java를 찾을 수 없습니다. Java를 설치하시겠습니까?")
+            else:
+                response = messagebox.askyesnocancel(title="경고", message=f"선택한 마인크래프트 버전({selected_version})에 대응하는 Java를 찾을 수 없습니다. Java를 설치하시려면 '예'를 누르거나, '취소'를 눌러 경로를 다시 지정할 수 있습니다.")
+
+            if response == 1:
+                progress_text.config(text="자바 자동 설치 중 (1/5) | Java 설치 파일 다운로드 중")
+                j_url = get_java_url('8' if java['version'] == '1.8' else java['version'])
+                download(j_url, dir_path_2, 'java_installer.msi')
+
+                progress_text.config(text="자바 자동 설치 중 (2/5) | UAC 확인 중")
+                show_message("알림", "관리자 권한이 필요한 자바 설치 프로그램이 실행됩니다. 관리자 권한 요청이 뜨면 허용을 눌러주세요.")
+
+                cmd = [
+                    "powershell",
+                    "-Command",
+                    (
+                        f"Start-Process msiexec -ArgumentList '/i', '\"{(dir_path_2).replace('/', '\\')}\\java_installer.msi\"', "
+                        "'INSTALLLEVEL=1', '/quiet'"
+                        "-Verb runAs -Wait"
+                    )
+                ]
+
+                progress_text.config(text="자바 자동 설치 중 (3/5) | Java 설치 중")
+
+                result = subprocess.run(cmd)
+
+                print("Exit code:", result.returncode)
+
+                if result.returncode == 0:
+                    progress_text.config(text="자바 자동 설치 중 (4/5) | Java 설치 완료, Java 설치 파일 삭제 중")
+                    os.remove(f"{dir_path_2}/java_installer.msi")
+
+                    progress_text.config(text="자바 자동 설치 중 (5/5) | Java 설치 완료, Java 재탐지 대기 중")
+                    time.sleep(5)
+                    
+                    clear_dir()
+                    java = detect_java(selected_version, "(자동 탐지)", p_var_update, progress_text, dir_path_2)
+
+                    if java == False:
+                        p_var_update(0)
+                        progress_text.config(text="대기 중")
+                        try: shutil.rmtree(dir_path_2)
+                        except:
+                            if selected_java == "(자동 탐지)": return show_warning("경고", f"Java 자동 탐지 과정에서 오류가 발생하여 버킷 제작을 중지합니다.\n폴더를 삭제하는 과정에서 오류가 발생하여, 폴더를 삭제하지 못하였습니다.")
+                            else: return show_warning("경고", f"Java 자동 탐지 과정에서 오류가 발생하여 버킷 제작을 중지합니다.\n자바 경로가 올바른 형태로 되어있는지, (jdk,jre,zulu-version) 형태로 되어있는지 확인해주세요.\n폴더를 삭제하는 과정에서 오류가 발생하여, 폴더를 삭제하지 못하였습니다.")
+                        else:
+                            if selected_java == "(자동 탐지)": return show_warning("경고", f"Java 자동 탐지 과정에서 오류가 발생하여 버킷 제작을 중지합니다.버킷 제작을 중지하고 폴더를 삭제합니다.")
+                            else: return show_warning("경고", f"Java 자동 탐지 과정에서 오류가 발생하여 버킷 제작을 중지합니다.\n자바 경로가 올바른 형태로 되어있는지, (jdk,jre,zulu-version) 형태로 되어있는지 확인해주세요.\n버킷 제작을 중지하고 폴더를 삭제합니다.")
+
+                    if java['status'] == False:
+                        p_var_update(0)
+                        progress_text.config(text="대기 중")
+                        try: shutil.rmtree(dir_path_2)
+                        except: return show_warning("경고", f"자바 설치에 실패하였습니다.\n버킷 제작을 중지합니다.\n폴더를 삭제하는 과정에서 오류가 발생하여, 폴더를 삭제하지 못하였습니다.")
+                        else: return show_warning("경고", f"자바 설치에 실패하였습니다.\n버킷 제작을 중지하고 폴더를 삭제합니다.")
+                else:
+                    p_var_update(0)
+                    progress_text.config(text="대기 중")
+                    try: shutil.rmtree(dir_path_2)
+                    except: return show_warning("경고", f"자바 설치에 실패하였습니다.\n버킷 제작을 중지합니다.\n폴더를 삭제하는 과정에서 오류가 발생하여, 폴더를 삭제하지 못하였습니다.")
+                    else: return show_warning("경고", f"자바 설치에 실패하였습니다.\n버킷 제작을 중지하고 폴더를 삭제합니다.")
+
+            elif response == 0:
+                f = subprocess.Popen([f'java', '-version'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+
+                while f.poll() is None:
+                    line = f.stdout.readline()
+                    if line.decode().strip().startswith('java version') or line.decode().strip().startswith('openjdk version'):
+                        java_version = 'java'
+
+                if java_version == 'java': show_warning("경고", f"Java 자동 탐지에 실패하여 기본 내장 Java로 설정하였습니다.")
+                else:
+                    p_var_update(0)
+                    progress_text.config(text="대기 중")
+                    try: shutil.rmtree(dir_path_2)
+                    except: return show_warning("경고", f"선택한 마인크래프트 버전({selected_version})은 Java {'8(1.8)' if java['version'] == '1.8' else java['version']} 이상을 요구하지만, 탐지할 수 없습니다.\n버킷 제작을 중지합니다.\n폴더를 삭제하는 과정에서 오류가 발생하여, 폴더를 삭제하지 못하였습니다.")
+                    else: return show_warning("경고", f"선택한 마인크래프트 버전({selected_version})은 Java {'8(1.8)' if java['version'] == '1.8' else java['version']} 이상을 요구하지만, 탐지할 수 없습니다.\n버킷 제작을 중지하고 폴더를 삭제합니다.")
+            else:
+                p_var_update(0)
+                progress_text.config(text="대기 중")
+                try: shutil.rmtree(dir_path_2)
+                except: return show_warning("경고", f"선택한 마인크래프트 버전({selected_version})은 Java {'8(1.8)' if java['version'] == '1.8' else java['version']} 이상을 요구하지만, 탐지할 수 없습니다.\n버킷 제작을 중지합니다.\n폴더를 삭제하는 과정에서 오류가 발생하여, 폴더를 삭제하지 못하였습니다.")
+                else: return show_warning("경고", f"선택한 마인크래프트 버전({selected_version})은 Java {'8(1.8)' if java['version'] == '1.8' else java['version']} 이상을 요구하지만, 탐지할 수 없습니다.\n버킷 제작을 중지하고 폴더를 삭제합니다.")
+
+        progress_text.config(text="자바 버전 탐지 중 .. (2/2) | 자바 파일 경로 설정")
+        # java_path = f'{java_path}/{java_version}/bin/java.exe'
+        java_version = java['version']
+        java_path = java['path']
+
+        progress_text.config(text="자바 버전 탐지 완료")
+
+        p_var_update(40)
+        # 실행 파일 생성
+        progress_text.config(text="실행 파일 생성 중 . (1/1) | 실행 파일 생성 중")
+        with open(f'{dir_path_2}/start.bat', 'w+') as f:
+            if java_version == 'java':
+                if selected_bukkit == "Forge" and int(selected_version.split(".")[1]) >= 17:
+                    f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\njava -Xms{selected_min_ram} -Xmx{selected_max_ram} @libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
+                elif selected_bukkit == "NeoForge":
+                    f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\njava -Xms{selected_min_ram} -Xmx{selected_max_ram} @libraries/net/neoforged/neoforge/{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
+                else:
+                    f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\njava -Xms{selected_min_ram} -Xmx{selected_max_ram} -jar server.jar nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
+            else:
+                if selected_bukkit == "Forge" and int(selected_version.split(".")[1]) >= 17:
+                    f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\n"{java_path}" -Xms{selected_min_ram} -Xmx{selected_max_ram} @libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
+                elif selected_bukkit == "NeoForge":
+                    f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\n"{java_path}" -Xms{selected_min_ram} -Xmx{selected_max_ram} @libraries/net/neoforged/neoforge/{selected_build}/win_args.txt %* nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
+                else:
+                    f.write(f'@echo off\ntitle {folder_name_entry.get().replace("{버전}", selected_version).replace("{버킷}", selected_bukkit).replace("{번호}", str(folder_count+1)).replace("{빌드}", selected_build)}\n:main\ncls\n"{java_path}" -Xms{selected_min_ram} -Xmx{selected_max_ram} -jar server.jar nogui\nTIMEOUT 10 /NOBREAK\ngoto main')
             f.close()
+        progress_text.config(text="실행 파일 생성 완료")
 
-        progress_text.config(text="Eula 허용 중 . (4/5) | 허용 중")
-        eula = eula.replace('false', 'true')
+        if selected_bukkit == "Forge" or selected_bukkit == "NeoForge":
+            progress_text.config(text="(Neo)Forge 실행 파일 생성 중 . (1/1) | 실행 파일 생성 중 ( 세부 로그 버튼을 눌러 진행 상황 확인 가능 )")
+            os.chdir(dir_path_2)
+            if java_version == 'java':
+                # os.system(f'java -jar install.jar --installServer')
+                f = subprocess.Popen(['java', '-jar', 'install.jar', '--installServer'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            else:
+                # os.system(fr'""{java_path}" -jar install.jar" --installServer')
+                f = subprocess.Popen([f'{java_path}', '-jar', 'install.jar', '--installServer'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
 
-        progress_text.config(text="Eula 허용 중 .. (5/5) | eula.txt 쓰기 중")
-        with open(f'{dir_path_2}/eula.txt', 'w') as f:
-            f.write(eula)
-            f.close()
+            while f.poll() is None:
+                line = f.stdout.readline()
+                if len(logs) > 1000:
+                    logs = ""
+                try: update_logs_box(line.decode('utf-8').strip())
+                except UnicodeDecodeError:
+                    try: update_logs_box(line.decode('cp949').strip())
+                    except: pass
 
-        progress_text.config(text="Eula 허용 완료")
+            os.remove(f'install.jar')
+            if int(selected_version.split(".")[1]) <= 16:
+                for i in os.listdir(dir_path_2):
+                    if 'forge-' in i and '.jar' in i:
+                        os.rename(i, 'server.jar')
+                        break
+            else: pass
+            progress_text.config(text="(Neo)Forge 실행 파일 생성 완료")
 
-    p_var_update(70)
-    # server.properties 수정
-    if server_f_status == True:
-        progress_text.config(text="server.properties 수정 중 . (1/1) | 수정 중")
-        modify_property(f'{dir_path_2}/server.properties', 'gamemode', gamemodes_en[gamemode])
-        modify_property(f'{dir_path_2}/server.properties', 'difficulty', difficulties_en[difficulty])
-        modify_property(f'{dir_path_2}/server.properties', 'level-type', leveltypes_en[level_type])
-        modify_property(f'{dir_path_2}/server.properties', 'pvp', str(pvp).lower())
-        modify_property(f'{dir_path_2}/server.properties', 'spawn-protection', str(spawn_protection))
-        modify_property(f'{dir_path_2}/server.properties', 'allow-flight', str(allow_flight).lower())
-        modify_property(f'{dir_path_2}/server.properties', 'max-players', str(max_players))
-        modify_property(f'{dir_path_2}/server.properties', 'enable-command-block', str(allow_command_block).lower())
-        modify_property(f'{dir_path_2}/server.properties', 'server-port', str(port))
-        modify_property(f'{dir_path_2}/server.properties', 'white-list', str(whitelist).lower())
-        modify_property(f'{dir_path_2}/server.properties', 'motd', f'{get_unicode(motd).strip()}')
-        progress_text.config(text="server.properties 수정 완료")
+        p_var_update(50)
+        # 생성 파일 삭제
+        progress_text.config(text="기타 생성 파일 삭제 중 . (1/2) | run.bat 탐지 및 삭제 중")
+        if os.path.exists(f'{dir_path_2}/run.bat'): os.remove(f'{dir_path_2}/run.bat')
+        progress_text.config(text="기타 생성 파일 삭제 중 . (2/2) | run.bat 탐지 및 삭제 중")
+        if os.path.exists(f'{dir_path_2}/run.sh'): os.remove(f'{dir_path_2}/run.sh')
+        progress_text.config(text="기타 생성 파일 삭제 완료")
 
-    p_var_update(80)
-    # 플러그인 다운로드
-    if plugins_status == True:
-        progress_text.config(text=f"플러그인 다운로드 중 . (1/{len(plugins) + 1}) | 플러그인 폴더 생성")
-        if not os.path.exists(f'{dir_path_2}/plugins'):
-            os.mkdir(f'{dir_path_2}/plugins')
+        p_var_update(60)
 
-        _t = '.'
-        for i in plugins:
-            _t += '.'
-            if _t == '...': _t = '.'
-            progress_text.config(text=f"플러그인 다운로드 중 .{_t} (1/{len(plugins) + 1}) | ({len(plugins)} 개 중 {plugins.index(i) + 1} 번째) {i[0]} 다운로드 중 ...")
-            if i[2] == False:
-                url = download_plugins_mods(i[5])
-                download(url, f'{dir_path_2}/plugins', str(url).split('/')[-1])
-            else: su.copy(i[3], f'{dir_path_2}/plugins/{i[0]}')
-        progress_text.config(text=f"플러그인 다운로드 완료")
+        
+        logs = ""
+        # eula 허용
+        if not (selected_bukkit == "Mohist" or selected_bukkit == "CatServer"):
+            progress_text.config(text="Eula 허용 중 . (1/5) | 버킷 폴더 경로 지정")
+            os.chdir(dir_path_2)
 
-    p_var_update(90)  
-    # 모드 다운로드
-    if mods_status == True:
-        progress_text.config(text=f"모드 다운로드 중 . (1/{len(mods) + 1}) | 모드 폴더 생성")
-        if not os.path.exists(f'{dir_path_2}/mods'):
-            os.mkdir(f'{dir_path_2}/mods')
+            progress_text.config(text="Eula 허용 중 .. (2/5) | 서버 실행 중 ( 시간이 소요됩니다 )")
+            if java_version == 'java':
+                if selected_bukkit == "Forge" and int(selected_version.split(".")[1]) >= 17:
+                    # os.system(f'java @libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt %* nogui')
+                    p = subprocess.Popen(['java', f'@libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt', '%*', 'nogui'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                elif selected_bukkit == "NeoForge":
+                    # os.system(f'java @libraries/net/neoforged/neoforge/{selected_build}/win_args.txt %* nogui')
+                    p = subprocess.Popen(['java', f'@libraries/net/neoforged/neoforge/{selected_build}/win_args.txt', '%*', 'nogui'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                else:
+                    # os.system(f'java -jar server.jar nogui')
+                    p = subprocess.Popen(['java', '-jar', 'server.jar', 'nogui'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            else:
+                if selected_bukkit == "Forge" and int(selected_version.split(".")[1]) >= 17:
+                    # os.system(f'"{java_path}" @libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt %* nogui')
+                    p = subprocess.Popen([f'{java_path}', f'@libraries/net/minecraftforge/forge/{selected_version}-{selected_build}/win_args.txt', '%*', 'nogui'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                elif selected_bukkit == "NeoForge":
+                    # os.system(f'"{java_path}" @libraries/net/neoforged/neoforge/{selected_build}/win_args.txt %* nogui')
+                    p = subprocess.Popen([f'{java_path}', f'@libraries/net/neoforged/neoforge/{selected_build}/win_args.txt', '%*', 'nogui'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                else:
+                    # os.system(f'"{java_path}" -jar server.jar nogui')
+                    p = subprocess.Popen([f'{java_path}', '-jar', 'server.jar', 'nogui'], shell=True, cwd=dir_path_2, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                
+            while p.poll() is None:
+                line = p.stdout.readline()
+                try: update_logs_box(line.decode('utf-8').strip())
+                except UnicodeDecodeError:
+                    try: update_logs_box(line.decode('cp949').strip())
+                    except: print("?")
 
-        _t = '.'
-        for i in mods:
-            _t += '.'
-            if _t == '...': _t = '.'
-            progress_text.config(text=f"모드 다운로드 중 .{_t} ({mods.index(i) + 2}/{len(mods) + 1}) | ({len(mods)} 개 중 {mods.index(i) + 1} 번째) {i[0]} 다운로드 중 ...")
-            if i[2] == False:
+            progress_text.config(text="Eula 허용 중 ... (3/5) | eula.txt 읽기 중")
+            with open(f'{dir_path_2}/eula.txt', 'r') as f:
+                eula = f.read()
+                f.close()
 
-                loader = ""
-                if selected_bukkit == "NeoForge": loader = "neoforge"
-                elif selected_bukkit == "Mohist" or selected_bukkit == "Forge" or selected_bukkit == "CatServer": loader = "forge"
-                elif selected_bukkit == "Fabric": loader = "fabric"
-                elif selected_bukkit == "Arclight":
-                    if selected_build == "neoforge": loader == "neoforge"
-                    elif selected_build == "forge": loader = "forge"
-                    else: loader = "fabric"
+            progress_text.config(text="Eula 허용 중 . (4/5) | 허용 중")
+            eula = eula.replace('false', 'true')
 
-                url = download_plugins_mods(i[5])
-                download(url, f'{dir_path_2}/mods', str(url).split('/')[-1])
-            else: su.copy(i[3], f'{dir_path_2}/mods/{i[0]}')
+            progress_text.config(text="Eula 허용 중 .. (5/5) | eula.txt 쓰기 중")
+            with open(f'{dir_path_2}/eula.txt', 'w') as f:
+                f.write(eula)
+                f.close()
 
-            progress_text.config(text=f"모드 다운로드 완료")
+            progress_text.config(text="Eula 허용 완료")
 
-    p_var_update(99)
-    # 맵 설정
-    if map_folder != "":
-        progress_text.config(text="맵 폴더 복사 중 . (1/1) | 복사 중")
-        # if not os.path.exists(f'{dir_path_2}/world'):
-        #     os.mkdir(f'{dir_path_2}/world')
-        su.copytree(map_folder, f'{dir_path_2}/world')
+        p_var_update(70)
+        # server.properties 수정
+        if server_f_status == True:
+            progress_text.config(text="server.properties 수정 중 . (1/1) | 수정 중")
+            modify_property(f'{dir_path_2}/server.properties', 'gamemode', gamemodes_en[gamemode])
+            modify_property(f'{dir_path_2}/server.properties', 'difficulty', difficulties_en[difficulty])
+            modify_property(f'{dir_path_2}/server.properties', 'level-type', leveltypes_en[level_type])
+            modify_property(f'{dir_path_2}/server.properties', 'pvp', str(pvp).lower())
+            modify_property(f'{dir_path_2}/server.properties', 'spawn-protection', str(spawn_protection))
+            modify_property(f'{dir_path_2}/server.properties', 'allow-flight', str(allow_flight).lower())
+            modify_property(f'{dir_path_2}/server.properties', 'max-players', str(max_players))
+            modify_property(f'{dir_path_2}/server.properties', 'enable-command-block', str(allow_command_block).lower())
+            modify_property(f'{dir_path_2}/server.properties', 'server-port', str(port))
+            modify_property(f'{dir_path_2}/server.properties', 'white-list', str(whitelist).lower())
+            modify_property(f'{dir_path_2}/server.properties', 'motd', f'{get_unicode(motd).strip()}')
+            progress_text.config(text="server.properties 수정 완료")
 
-        progress_text.config(text="맵 폴더 복사 완료")
+        p_var_update(80)
+        # 플러그인 다운로드
+        if plugins_status == True:
+            progress_text.config(text=f"플러그인 다운로드 중 . (1/{len(plugins) + 1}) | 플러그인 폴더 생성")
+            if not os.path.exists(f'{dir_path_2}/plugins'):
+                os.mkdir(f'{dir_path_2}/plugins')
 
-    p_var_update(100)
-    progress_text.config(text="버킷 생성 완료!")
-    print("완료")
-    os.startfile(dir_path_2)
-    os.chdir(original_dir)
+            _t = '.'
+            for i in plugins:
+                _t += '.'
+                if _t == '...': _t = '.'
+                progress_text.config(text=f"플러그인 다운로드 중 .{_t} (1/{len(plugins) + 1}) | ({len(plugins)} 개 중 {plugins.index(i) + 1} 번째) {i[0]} 다운로드 중 ...")
+                if i[2] == False:
+                    url = download_plugins_mods(i[5])
+                    download(url, f'{dir_path_2}/plugins', str(url).split('/')[-1])
+                else: su.copy(i[3], f'{dir_path_2}/plugins/{i[0]}')
+            progress_text.config(text=f"플러그인 다운로드 완료")
+
+        p_var_update(90)  
+        # 모드 다운로드
+        if mods_status == True:
+            progress_text.config(text=f"모드 다운로드 중 . (1/{len(mods) + 1}) | 모드 폴더 생성")
+            if not os.path.exists(f'{dir_path_2}/mods'):
+                os.mkdir(f'{dir_path_2}/mods')
+
+            _t = '.'
+            for i in mods:
+                _t += '.'
+                if _t == '...': _t = '.'
+                progress_text.config(text=f"모드 다운로드 중 .{_t} ({mods.index(i) + 2}/{len(mods) + 1}) | ({len(mods)} 개 중 {mods.index(i) + 1} 번째) {i[0]} 다운로드 중 ...")
+                if i[2] == False:
+
+                    loader = ""
+                    if selected_bukkit == "NeoForge": loader = "neoforge"
+                    elif selected_bukkit == "Mohist" or selected_bukkit == "Forge" or selected_bukkit == "CatServer": loader = "forge"
+                    elif selected_bukkit == "Fabric": loader = "fabric"
+                    elif selected_bukkit == "Arclight":
+                        if selected_build == "neoforge": loader == "neoforge"
+                        elif selected_build == "forge": loader = "forge"
+                        else: loader = "fabric"
+
+                    url = download_plugins_mods(i[5])
+                    download(url, f'{dir_path_2}/mods', str(url).split('/')[-1])
+                else: su.copy(i[3], f'{dir_path_2}/mods/{i[0]}')
+
+                progress_text.config(text=f"모드 다운로드 완료")
+
+        p_var_update(99)
+        # 맵 설정
+        if map_folder != "":
+            progress_text.config(text="맵 폴더 복사 중 . (1/1) | 복사 중")
+            # if not os.path.exists(f'{dir_path_2}/world'):
+            #     os.mkdir(f'{dir_path_2}/world')
+            su.copytree(map_folder, f'{dir_path_2}/world')
+
+            progress_text.config(text="맵 폴더 복사 완료")
+
+        p_var_update(100)
+        progress_text.config(text="버킷 생성 완료!")
+        print("완료")
+        os.startfile(dir_path_2)
+        os.chdir(original_dir)
+        create_button.config(state=tk.NORMAL)
+    except Exception as e:
+        print(e)
+        p_var_update(0)
+        progress_text.config(text="대기 중")
+        try: shutil.rmtree(dir_path_2)
+        except:
+            return show_warning("경고", f"버킷을 제작하던 중 오류가 발생하여 버킷 제작을 중지합니다.\n폴더를 삭제하는 과정에서 오류가 발생하여, 폴더를 삭제하지 못하였습니다.")
+        else:
+            return show_warning("경고", f"버킷을 제작하던 중 오류가 발생하여 버킷 제작을 중지합니다.\n폴더를 삭제합니다.")
 
 def define_bukkit():
     try:
@@ -816,6 +949,7 @@ def define_bukkit():
         create_button.config(state=tk.NORMAL)
         # server_propeties_button.config(state=tk.NORMAL)
         etc_server_settings_button.config(state=tk.NORMAL)
+        etc_bukkit_settings_button.config(state=tk.NORMAL)
         plugins_button.config(state=tk.DISABLED)
         mods_button.config(state=tk.DISABLED)
 
@@ -855,7 +989,7 @@ def get_build_version(event) -> None:
             'accept': 'application/json',
         }
 
-        response = requests.get('https://api.papermc.io/v2/projects/paper/versions/{0}'.format(selected_version), headers=headers)
+        response = requests.get(paper_get_build_api.format(selected_version=selected_version), headers=headers)
         response_json = response.json()
         builds = response_json["builds"]
         builds.sort(reverse=True)
@@ -865,7 +999,7 @@ def get_build_version(event) -> None:
             'accept': 'application/json',
         }
 
-        response = requests.get('https://api.papermc.io/v2/projects/folia/versions/{0}'.format(selected_version), headers=headers)
+        response = requests.get(folia_get_build_api.format(selected_version=selected_version), headers=headers)
         response_json = response.json()
         builds = response_json["builds"]
         builds.sort(reverse=True)
@@ -875,7 +1009,7 @@ def get_build_version(event) -> None:
             'accept': 'application/json',
         }
 
-        response = requests.get('https://api.papermc.io/v2/projects/velocity/versions/{0}'.format(selected_version), headers=headers)
+        response = requests.get(velocity_get_build_api.format(selected_version=selected_version), headers=headers)
         response_json = response.json()
         builds = response_json["builds"]
         builds.sort(reverse=True)
@@ -885,7 +1019,7 @@ def get_build_version(event) -> None:
             'accept': 'application/json',
         }
 
-        response = requests.get('https://api.leavesmc.org/v2/projects/leaves/versions/{0}'.format(selected_version), headers=headers)
+        response = requests.get(leaves_get_build_api.format(selected_version=selected_version), headers=headers)
         response_json = response.json()
         builds = response_json["builds"]
         builds.sort(reverse=True)
@@ -895,7 +1029,7 @@ def get_build_version(event) -> None:
             'accept': 'application/json',
         }
 
-        response = requests.get('https://api.purpurmc.org/v2/purpur/{0}'.format(selected_version), headers=headers)
+        response = requests.get(purpur_get_build_api.format(selected_version=purpur_get_build_api), headers=headers)
         response_json = response.json()
         builds = response_json["builds"]["all"]
         builds.sort(reverse=True)
@@ -908,7 +1042,7 @@ def get_build_version(event) -> None:
             'accept': 'application/json',
         }
 
-        response = requests.get('https://maven.minecraftforge.net/net/minecraftforge/forge/maven-metadata.xml', headers=headers)
+        response = requests.get(forge_get_build_api, headers=headers)
         response_json = response.text
         response_dict = xmltodict.parse(response_json)
         builds = response_dict["metadata"]["versioning"]["versions"]["version"]
@@ -927,7 +1061,7 @@ def get_build_version(event) -> None:
             'accept': 'application/json',
         }
 
-        response = requests.get('https://meta.fabricmc.net/v1/versions/loader/{0}'.format(selected_version), headers=headers)
+        response = requests.get(fabric_get_build_api.format(selected_version=selected_version), headers=headers)
         response_json = response.json()
         builds = response_json
         for i in range(len(builds)):
@@ -942,7 +1076,7 @@ def get_build_version(event) -> None:
             'accept': 'application/json',
         }
 
-        response = requests.get('https://api.mohistmc.com/project/mohist/{0}/builds'.format(selected_version), headers=headers)
+        response = requests.get(mohist_get_build_api.format(selected_version=selected_version), headers=headers)
         response_json = response.json()
         builds = response_json
         for i in range(len(builds)):
@@ -955,7 +1089,7 @@ def get_build_version(event) -> None:
             'accept': 'application/json',
         }
 
-        response = requests.get('https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge', headers=headers)
+        response = requests.get(neoforge_get_build_api, headers=headers)
         response_json = response.json()
         builds = []
         for i in response_json['versions']:
@@ -968,7 +1102,7 @@ def get_build_version(event) -> None:
             'accept': 'application/json',
         }
 
-        response = requests.get(f'https://files.hypoglycemia.icu/v1/files/arclight/minecraft/{selected_version}', headers=headers)
+        response = requests.get(arclight_get_build_api.format(selected_version=selected_version), headers=headers)
         response_json = response.json()
         builds = []
         for i in response_json['files']:
@@ -985,7 +1119,7 @@ def get_build_version(event) -> None:
             'accept': 'application/json',
         }
 
-        response = requests.get(f'https://dl-api.spongepowered.org/v2/groups/org.spongepowered/artifacts/spongevanilla/versions?tags=,minecraft:{selected_version}', headers=headers)
+        response = requests.get(spongevanilla_get_build_api.format(selected_version=selected_version), headers=headers)
         response_json = response.json()
         builds = []
         for i in response_json['artifacts']:
@@ -1019,7 +1153,6 @@ def get_bukkit_version_thread(event) -> None:
     thread.start()
 
 def get_bukkit_version(event):
-
     selected_bukkit = bukkit_box.get()
 
     if selected_bukkit == "Paper":
@@ -1027,7 +1160,7 @@ def get_bukkit_version(event):
             'accept': 'application/json',
         }
 
-        response = requests.get('https://api.papermc.io/v2/projects/paper', headers=headers)
+        response = requests.get(paper_get_version_api, headers=headers)
         response_json = response.json()
         versions = response_json["versions"]
         versions.sort(reverse=True, key=Version)
@@ -1037,7 +1170,7 @@ def get_bukkit_version(event):
             'accept': 'application/json',
         }
 
-        response = requests.get('https://api.papermc.io/v2/projects/folia', headers=headers)
+        response = requests.get(folia_get_version_api, headers=headers)
         response_json = response.json()
         versions = response_json["versions"]
         versions.sort(reverse=True, key=Version)
@@ -1047,7 +1180,7 @@ def get_bukkit_version(event):
             'accept': 'application/json',
         }
 
-        response = requests.get('https://api.papermc.io/v2/projects/velocity', headers=headers)
+        response = requests.get(velocity_get_version_api, headers=headers)
         response_json = response.json()
         versions = response_json["versions"]
         versions.sort(reverse=True)
@@ -1057,7 +1190,7 @@ def get_bukkit_version(event):
             'accept': 'application/json',
         }
 
-        response = requests.get('https://api.leavesmc.org/v2/projects/leaves', headers=headers)
+        response = requests.get(leaves_get_version_api, headers=headers)
         response_json = response.json()
         versions = response_json["versions"]
         versions.sort(reverse=True, key=Version)
@@ -1067,7 +1200,7 @@ def get_bukkit_version(event):
             'accept': 'application/json',
         }
 
-        response = requests.get('https://api.purpurmc.org/v2/purpur', headers=headers)
+        response = requests.get(purpur_get_version_api, headers=headers)
         response_json = response.json()
         versions = response_json["versions"]
         versions.sort(reverse=True, key=Version)
@@ -1077,7 +1210,7 @@ def get_bukkit_version(event):
             'accept': 'application/json',
         }
 
-        response = requests.get('https://launchermeta.mojang.com/mc/game/version_manifest.json', headers=headers)
+        response = requests.get(vanilla_versions_api, headers=headers)
         response_json = response.json()
         versions = response_json["versions"]
         versions = [version["id"] for version in versions]
@@ -1087,7 +1220,7 @@ def get_bukkit_version(event):
             'accept': 'application/json',
         }
 
-        response = requests.get('https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json', headers=headers)
+        response = requests.get(forge_get_version_api, headers=headers)
         response_json = response.json()
         versions = response_json["promos"]
         versions = list(versions.keys())
@@ -1101,7 +1234,7 @@ def get_bukkit_version(event):
             'accept': 'application/json',
         }
 
-        response = requests.get('https://meta.fabricmc.net/v2/versions/game', headers=headers)
+        response = requests.get(fabric_get_version_api, headers=headers)
         response_json = response.json()
         versions = response_json
         for i in range(len(versions)):
@@ -1112,7 +1245,7 @@ def get_bukkit_version(event):
             'accept': 'application/json',
         }
 
-        response = requests.get('https://mohistmc.com/api/v2/projects/mohist', headers=headers)
+        response = requests.get(mohist_get_version_api, headers=headers)
         response_json = response.json()
         versions = response_json["versions"]
 
@@ -1123,7 +1256,7 @@ def get_bukkit_version(event):
             'accept': 'application/json',
         }
 
-        response = requests.get('https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge', headers=headers)
+        response = requests.get(neoforge_get_version_api, headers=headers)
         response_json = response.json()
         versions = []
         for i in response_json['versions']:
@@ -1132,20 +1265,20 @@ def get_bukkit_version(event):
         versions.sort(reverse=True)
 
     elif selected_bukkit == "Plazma":
-        versions = ["1.21.4", "1.21.3", "1.21.1", "1.20.6", "1.20.4", "1.20.2", "1.20.1", "1.19.4"]
+        versions = plazma_versions
 
     elif selected_bukkit == "CatServer":
-        versions = ["1.18.2", "1.16.5", "1.12.2"]
+        versions = catserver_versions
 
     elif selected_bukkit == "Pufferfish":
-        versions = ["1.21.3", "1.20.4", "1.19.4", "1.18.2", "1.17.1"]
+        versions = pufferfish_versions
 
     elif selected_bukkit == "Arclight":
         headers = {
             'accept': 'application/json',
         }
 
-        response = requests.get('https://files.hypoglycemia.icu/v1/files/arclight/minecraft', headers=headers)
+        response = requests.get(arclight_get_version_api, headers=headers)
         response_json = response.json()
         versions = []
         for i in response_json["files"]:
@@ -1158,7 +1291,7 @@ def get_bukkit_version(event):
             'accept': 'application/json',
         }
 
-        response = requests.get('https://dl-api.spongepowered.org/v2/groups/org.spongepowered/artifacts/spongevanilla', headers=headers)
+        response = requests.get(spongevanilla_get_version_api, headers=headers)
         response_json = response.json()
         versions = []
         for i in response_json["tags"]["minecraft"]:
@@ -1232,12 +1365,12 @@ def get_bukkit_info() -> None:
     bukkit_select_button.grid(row=3, column=1, padx=5, pady=5)
 
 def download_plugins_mods(id):
-    response = requests.get(f'https://api.modrinth.com/v2/version/{id}')
+    response = requests.get(modrinth_download_api.format(id=id))
     result = response.json()
     return result['files'][0]['url']
 
 def search_plugins_version(id, versions):
-    response = requests.get(f'https://api.modrinth.com/v2/project/{id}/version?loaders=["bukkit", "paper"]&game_versions=["{versions}"]')
+    response = requests.get(modrinth_search_plugins_version_api.format(id=id, versions=versions))
     result = response.json()
     results = []
     for i in result:
@@ -1246,11 +1379,11 @@ def search_plugins_version(id, versions):
 
 def search_mods_version(id, versions, loader):
     if "neoforge" in loader:
-        response = requests.get(f'https://api.modrinth.com/v2/project/{id}/version?loaders=["neoforge"]&game_versions=["{versions}"]')
+        response = requests.get(modrinth_search_mods_version_api.format(id=id, loaders="neoforge", versions=versions))
     elif "forge" in loader:
-        response = requests.get(f'https://api.modrinth.com/v2/project/{id}/version?loaders=["forge"]&game_versions=["{versions}"]')
+        response = requests.get(modrinth_search_mods_version_api.format(id=id, loaders="forge", versions=versions))
     elif "fabric" in loader:
-        response = requests.get(f'https://api.modrinth.com/v2/project/{id}/version?loaders=["fabric"]&game_versions=["{versions}"]')
+        response = requests.get(modrinth_search_mods_version_api.format(id=id, loaders="fabric", versions=versions))
     result = response.json()
     results = []
     for i in result:
@@ -1258,7 +1391,7 @@ def search_mods_version(id, versions, loader):
     return results
 
 def search_plugin(query: str, versions: str):
-    response = requests.get(f'https://api.modrinth.com/v2/search?query={query}&facets=[["categories:bukkit","categories:paper"],["project_type:plugin"],["versions:{versions}"]]&limit=20')
+    response = requests.get(modrinth_search_plugins_api.format(query=query, versions=versions))
     result = response.json()
     results = []
     for i in result['hits']:
@@ -1266,12 +1399,7 @@ def search_plugin(query: str, versions: str):
     return results
 
 def search_mods(query: str, versions: str, loader: str):
-    if loader == "neoforge":
-        response = requests.get(f'https://api.modrinth.com/v2/search?query={query}&facets=[["categories:neoforge"],["project_type:mod"],["versions:{versions}"],["server_side:optional","server_side:required"]]&limit=20')
-    elif loader == "forge":
-        response = requests.get(f'https://api.modrinth.com/v2/search?query={query}&facets=[["categories:forge"],["project_type:mod"],["versions:{versions}"],["server_side:optional","server_side:required"]]&limit=20')
-    elif loader == "fabric":
-        response = requests.get(f'https://api.modrinth.com/v2/search?query={query}&facets=[["categories:fabric"],["project_type:mod"],["versions:{versions}"],["server_side:optional","server_side:required"]]&limit=20')
+    response = requests.get(monrinth_search_mods_api.format(query=query, versions=versions, loader=loader))
     result = response.json()
     results = []
     for i in result['hits']:
@@ -2094,6 +2222,47 @@ def detail_settings():
     motd_preview.config(state='disabled')
     motd_preview.grid(row=1, column=1, padx=5, pady=5)
 
+def close_etc_bukkit_settings():
+    global jvm_custom
+    jvm_custom = jvm_custom_entry.get()
+    etc_bukkit_settings_ui.destroy()
+
+def etc_bukkit_settings():
+    global etc_bukkit_settings_ui
+    try:
+        etc_bukkit_settings_ui.focus()
+        return
+    except: pass
+    etc_bukkit_settings_ui = tk.Toplevel(window)
+    etc_bukkit_settings_ui.title("")
+    etc_bukkit_settings_ui.minsize(etc_bukkit_settings_ui.winfo_width(), etc_bukkit_settings_ui.winfo_height())
+    etc_bukkit_settings_ui.resizable(False, False)
+
+    etc_bukkit_settings_ui.wm_attributes("-topmost", 1)
+
+    apply_theme_to_titlebar(etc_bukkit_settings_ui)
+
+    etc_bukkit_settings_ui.update()
+    etc_bukkit_settings_ui.geometry(f"+{window.winfo_x()}+{window.winfo_y()}")
+
+    # main_text = tk.Label(detail_settings_ui, text="서버 설정", font=(font_f, "15"))
+    # main_text.grid(row=0, column=1, pady=10)
+
+    main_frame = ttk.LabelFrame(etc_bukkit_settings_ui, text="Settings", padding=(20, 10))
+    main_frame.config(labelanchor='n')
+    main_frame.grid(row=0, column=0, padx=10, pady=10)
+
+    etc_settings_apply_button = ttk.Button(etc_bukkit_settings_ui, text="적용", width=10, command=close_etc_bukkit_settings)
+    etc_settings_apply_button.grid(row=0, column=1, padx=5)
+
+    jvm_label = tk.Label(main_frame, text="JVM 명령행 옵션")
+    jvm_label.grid(row=0, column=0, padx=5, pady=5)
+
+    global jvm_custom_entry
+    jvm_custom_entry = ttk.Entry(main_frame, width=25, font=font)
+    jvm_custom_entry.insert(0, jvm_custom)
+    jvm_custom_entry.grid(row=0, column=1, padx=5, pady=5)
+
 def define_settings():
     global gamemode, difficulty, pvp, spawn_protection, allow_flight, max_players, allow_command_block, port, whitelist, motd, level_type
     gamemode = gamemode_box.current()
@@ -2242,7 +2411,7 @@ if __name__ == "__main__":
     main_frame.config(labelanchor='n')
     main_frame.grid(row=0, column=0, padx=10, pady=10, columnspan=2)
 
-    detail_text = tk.Label(window, text=f"버킷 생성기 {version}\nMade by _Richardo")
+    detail_text = tk.Label(window, text=f"버킷 생성기 {version}\n데이터베이스 버전 v{manifests_version}\nMade by _Richardo")
     detail_text.grid(row=1, column=0, pady=5, columnspan=2)
 
     etc_frame = ttk.LabelFrame(window, padding=(20, 10))
@@ -2362,6 +2531,9 @@ if __name__ == "__main__":
 
     mods_button = ttk.Button(settings_frame, text="모드", width=7, command=open_mods_list, state=tk.DISABLED)
     mods_button.grid(row=4, column=1, pady=8)
+
+    etc_bukkit_settings_button = ttk.Button(settings_frame, text="버킷 설정", width=10, command=etc_bukkit_settings, state=tk.DISABLED)
+    etc_bukkit_settings_button.grid(row=4, column=0, pady=5)
 
     create_button = ttk.Button(main_frame, text="버킷 제작", width=10, command=create_thread, state=tk.DISABLED)
     create_button.grid(row=3, column=1, pady=5)

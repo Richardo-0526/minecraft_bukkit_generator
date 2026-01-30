@@ -1,0 +1,93 @@
+{
+  "adoptium": {
+    "release_api": "https://api.adoptium.net/v3/info/available_releases",
+    "download_api": "https://api.adoptium.net/v3/installer/latest/{suitable_version}/ga/windows/{arch}/jdk/hotspot/normal/eclipse"
+  },
+  "bukkit": {
+    "updater_url": "https://www.richardo.net/files/bukkits/updater.exe",
+    "update_versions_url": "https://www.richardo.net/files/bukkits"
+  },
+  "paper": {
+    "get_jar_api": "https://api.papermc.io/v2/projects/paper/versions/{selected_version}/builds/{selected_build}/downloads/paper-{selected_version}-{selected_build}.jar",
+    "get_build_api": "https://api.papermc.io/v2/projects/paper/versions/{selected_version}",
+    "get_version_api": "https://api.papermc.io/v2/projects/paper"
+  },
+  "folia": {
+    "get_jar_api": "https://api.papermc.io/v2/projects/folia/versions/{selected_version}/builds/{selected_build}/downloads/folia-{selected_version}-{selected_build}.jar",
+    "get_build_api": "https://api.papermc.io/v2/projects/folia/versions/{selected_version}",
+    "get_version_api": "https://api.papermc.io/v2/projects/folia"
+  },
+  "velocity": {
+    "get_jar_api": "https://api.papermc.io/v2/projects/velocity/versions/{selected_version}/builds/{selected_build}/downloads/velocity-{selected_version}-{selected_build}.jar",
+    "get_build_api": "https://api.papermc.io/v2/projects/velocity/versions/{selected_version}",
+    "get_version_api": "https://api.papermc.io/v2/projects/velocity"
+  },
+  "leaves": {
+    "get_jar_api": "https://api.leavesmc.org/v2/projects/leaves/versions/{selected_version}/builds/{selected_build}/downloads/leaves-{selected_version}-{selected_build}.jar",
+    "get_build_api": "https://api.leavesmc.org/v2/projects/leaves/versions/{selected_version}",
+    "get_version_api": "https://api.leavesmc.org/v2/projects/leaves"
+  },
+  "purpur": {
+    "get_jar_api": "https://api.purpurmc.org/v2/purpur/{selected_version}/{selected_build}/download",
+    "get_build_api": "https://api.purpurmc.org/v2/purpur/{selected_version}",
+    "get_version_api": "https://api.purpurmc.org/v2/purpur"
+  },
+  "vanilla": {
+    "versions_api": "https://launchermeta.mojang.com/mc/game/version_manifest.json"
+  },
+  "forge": {
+    "get_jar_api": "https://maven.minecraftforge.net/net/minecraftforge/forge/{selected_version}-{selected_build}/forge-{selected_version}-{selected_build}-installer.jar",
+    "get_build_api": "https://maven.minecraftforge.net/net/minecraftforge/forge/maven-metadata.xml",
+    "get_version_api": "https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json"
+  },
+  "fabric": {
+    "versions_api": "https://meta.fabricmc.net/v2/versions/installer",
+    "get_jar_api": "https://meta.fabricmc.net/v2/versions/loader/{selected_version}/{selected_build}/{installer_version[0]}/server/jar",
+    "get_build_api": "https://meta.fabricmc.net/v1/versions/loader/{selected_version}",
+    "get_version_api": "https://meta.fabricmc.net/v2/versions/game"
+  },
+  "mohist": {
+    "get_jar_api": "https://api.mohistmc.com/project/mohist/{selected_version}/builds/{selected_build}/download",
+    "get_build_api": "https://api.mohistmc.com/project/mohist/{selected_version}/builds",
+    "get_version_api": "https://mohistmc.com/api/v2/projects/mohist"
+  },
+  "neoforge": {
+    "get_jar_api": "https://maven.neoforged.net/releases/net/neoforged/neoforge/{selected_build}/neoforge-{selected_build}-installer.jar",
+    "get_build_api": "https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge",
+    "get_version_api": "https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge"
+  },
+  "plazma": {
+    "get_jar_19_20_12_api": "https://dl.plazmamc.org/{selected_version}/1",
+    "get_jar_21_4_api": "https://ci.codemc.io/job/PlazmaMC/job/Plazma/job/ver%252F1.21.4/lastSuccessfulBuild/artifact/build/libs/plazma-paperclip-1.21.4-R0.1-SNAPSHOT-mojmap.jar",
+    "get_jar_21_8_api": "https://ci.codemc.io/job/PlazmaMC/job/Plazma/job/ver%2F1.21.8/46/artifact/plazma-server/build/libs/plazma-paperclip-1.21.8-R0.1-SNAPSHOT-mojmap.jar",
+    "get_jar_default_api": "https://dl.plazmamc.org/{selected_version}",
+    "versions": ["1.21.8", "1.21.4", "1.21.3", "1.21.1", "1.20.6", "1.20.4", "1.20.2", "1.20.1", "1.19.4"]
+  },
+  "catserver": {
+    "get_jar_18_2_api": "https://catmc.org/download/catserver_1_18_2",
+    "get_jar_16_5_api": "https://catmc.org/download/catserver_1_16_5",
+    "get_jar_12_2_api": "https://catserver.moe/download/universal",
+    "versions": ["1.18.2", "1.16.5", "1.12.2"]
+  },
+  "arclight": {
+    "versions_api": "https://files.hypoglycemia.icu/v1/files/arclight/minecraft/{selected_version}",
+    "get_build_api": "https://files.hypoglycemia.icu/v1/files/arclight/minecraft/{selected_version}",
+    "get_version_api": "https://files.hypoglycemia.icu/v1/files/arclight/minecraft"
+  },
+  "pufferfish": {
+    "get_jar_api": "https://ci.pufferfish.host/job/Pufferfish-1.{selected_version.split('.')[1]}/lastSuccessfulBuild/artifact/build/libs/pufferfish-paperclip-{selected_version}-R0.1-SNAPSHOT-mojmap.jar",
+    "versions": ["1.21.3", "1.20.4", "1.19.4", "1.18.2", "1.17.1"]
+  },
+  "spongevanilla": {
+    "get_jar_api": "https://repo.spongepowered.org/repository/maven-releases/org/spongepowered/spongevanilla/{selected_build}/spongevanilla-{selected_build}-universal.jar",
+    "get_build_api": "https://dl-api.spongepowered.org/v2/groups/org.spongepowered/artifacts/spongevanilla/versions?tags=,minecraft:{selected_version}",
+    "get_version_api": "https://dl-api.spongepowered.org/v2/groups/org.spongepowered/artifacts/spongevanilla"
+  },
+  "modrinth": {
+    "download_api": "https://api.modrinth.com/v2/version/{id}",
+    "search_plugins_version_api": "https://api.modrinth.com/v2/project/{id}/version?loaders=[\"bukkit\", \"paper\"]&game_versions=[\"{versions}\"]",
+    "search_mods_version_api": "https://api.modrinth.com/v2/project/{id}/version?loaders=[\"{loaders}\"]&game_versions=[\"{versions}\"]",
+    "search_plugins_api": "https://api.modrinth.com/v2/search?query={query}&facets=[[\"categories:bukkit\",\"categories:paper\"],[\"project_type:plugin\"],[\"versions:{versions}\"]]&limit=20",
+    "search_mods_api": "https://api.modrinth.com/v2/search?query={query}&facets=[[\"categories:{loader}\"],[\"project_type:mod\"],[\"versions:{versions}\"],[\"server_side:optional\",\"server_side:required\"]]&limit=20"
+  }
+}
