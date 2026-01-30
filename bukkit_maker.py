@@ -7,7 +7,7 @@ from tkinter import filedialog, messagebox, font as ft
 
 # ------------- 기본 변수
 
-version = 'v1.9.1'
+version = 'v1.9.2'
 difficulties = ["평화로움", "쉬움", "보통", "어려움"]
 difficulties_en = ["peaceful", "easy", "normal", "hard"]
 gamemodes = ["서바이벌", "크리에이티브", "모험", "관전"]
@@ -636,14 +636,12 @@ def create():
                 progress_text.config(text="자바 자동 설치 중 (2/5) | UAC 확인 중")
                 show_message("알림", "관리자 권한이 필요한 자바 설치 프로그램이 실행됩니다. 관리자 권한 요청이 뜨면 허용을 눌러주세요.")
 
+                msi_path = dir_path_2.replace("/", "\\") + "\\java_installer.msi"
+
                 cmd = [
                     "powershell",
                     "-Command",
-                    (
-                        f"Start-Process msiexec -ArgumentList '/i', '\"{(dir_path_2).replace('/', '\\')}\\java_installer.msi\"', "
-                        "'INSTALLLEVEL=1', '/quiet'"
-                        "-Verb runAs -Wait"
-                    )
+                    (f"Start-Process msiexec -ArgumentList '/i', '\"{msi_path}\"', ""'INSTALLLEVEL=1', '/quiet'""-Verb runAs -Wait")
                 ]
 
                 progress_text.config(text="자바 자동 설치 중 (3/5) | Java 설치 중")
