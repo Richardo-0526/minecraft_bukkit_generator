@@ -7,7 +7,7 @@ from tkinter import filedialog, messagebox, font as ft
 
 # ------------- 기본 변수
 
-version = 'v1.9.1`'
+version = 'v1.9.1'
 difficulties = ["평화로움", "쉬움", "보통", "어려움"]
 difficulties_en = ["peaceful", "easy", "normal", "hard"]
 gamemodes = ["서바이벌", "크리에이티브", "모험", "관전"]
